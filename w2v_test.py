@@ -2,21 +2,28 @@ import pandas as pd
 import numpy as np
 from w2v_use import CareerMap
 
+def testAnalogy(cm, a, b, c, d):
+    guess = cm.analogy(a, b, c)
+    # print(guess)
+    return int(d == guess)
+
+analogies = [
+    # A                 B                   C                   D (Answer)
+    ['Junior Developer', 'Senior Developer', 'Junior Engineer', 'Senior Engineer'],
+    ['Junior Engineer', 'Senior Engineer', 'Junior Developer', 'Senior Developer'],
+    ['CFO', 'CMO', 'Accountant', 'Doctor']
+]
+
 if __name__ == '__main__':
     # Create the word2vec map
     w2v = pd.read_json('pos_w2v_matrix.json')
     cMap = CareerMap(w2v, 'posTitle')
+    # Keep track of how well we do
+    score = 0
+    for l in analogies:
+        score += testAnalogy(cMap, *l)
 
-    # Start using it!
-    jD = cMap.getPoint(title='Junior Developer')
-    sD = cMap.getPoint(title='Senior Developer')
-    jE = cMap.getPoint(title='Junior Engineer')
-    sE = cMap.getPoint(title='Senior Engineer')
-
-    d_vec = sD.add(-jD)
-    e_vec = sE.add(-jE)
-
-    print(cMap.cosSim(e_vec, d_vec))
+    print('Score:', score*100/len(analogies), '%')
 
 # 1                          .NET Developer
 # 2                 .NET Software Developer

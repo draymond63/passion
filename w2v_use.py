@@ -12,15 +12,22 @@ class CareerMap():
         assert index or title, "Index or Title must be given"
         
         if index:
-            return pd.Series(self.vecs.iloc[index].values[0])
+            return self.vecs.iloc[index].squeeze()
 
         if title:
-            return pd.Series(self.vecs[ self.jobCol == title ].values[0])
+            return self.vecs[ self.jobCol == title ].squeeze()
 
-    # Add vectors together
-    def addIndices(self, a_index, b_index):
-        a = self.getPoint(a_index)
-        b = self.getPoint(b_index)
+    # Returns some of vectors
+    def add(self, a_index, b_index):
+        assert type(a) == type(b), f'Types must be the same, received {type(a)} & {type(b)}'
+        
+        if isinstance(a, int):
+            a = self.getPoint(a_index)
+            b = self.getPoint(b_index)
+        elif isinstance(a, str):
+            a = self.getPoint(title=a_index)
+            b = self.getPoint(title=b_index)
+        
         return a.add(b)
 
     # Take the centroid of a list of points
@@ -39,7 +46,7 @@ class CareerMap():
             df = self.vecs.drop(exclude)
         else:
             df = self.vecs
-        # Compute the Euclidean distance
+        # Compute the Euclidean distance**2
         dist_vect = np.sum((df - node)**2, axis=1)
         # Grab the lowest vector
         index = dist_vect.idxmin()
@@ -90,6 +97,11 @@ class CareerMap():
 
     # |u|*|v|*cos = a.b
     def cosSim(self, a, b):
+        assert type(a) == type(b), f'Types must be the same, received {type(a)} & {type(b)}'
+        # Convert titles to points
+        if isinstance(a, str):
+            a = self.getPoint(title=a)
+            b = self.getPoint(title=b)
         # Norms
         a_norm = np.linalg.norm(a.values)
         b_norm = np.linalg.norm(b.values)
