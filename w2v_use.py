@@ -18,15 +18,15 @@ class CareerMap():
             return self.vecs[ self.jobCol == title ].squeeze()
 
     # Returns some of vectors
-    def add(self, a_index, b_index):
+    def add(self, a, b):
         assert type(a) == type(b), f'Types must be the same, received {type(a)} & {type(b)}'
         
         if isinstance(a, int):
-            a = self.getPoint(a_index)
-            b = self.getPoint(b_index)
+            a = self.getPoint(a)
+            b = self.getPoint(b)
         elif isinstance(a, str):
-            a = self.getPoint(title=a_index)
-            b = self.getPoint(title=b_index)
+            a = self.getPoint(title=a)
+            b = self.getPoint(title=b)
         
         return a.add(b)
 
