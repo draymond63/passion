@@ -47,7 +47,6 @@ class CareerMap():
         return self.w2v.iloc[index]
 
     def combJob(self, titles, exclude=None, approx=True):
-        # try:
         # Grab the indices of all titles fiven
         i_list = self.w2v[ self.jobCol.isin(titles) ].index.values
 
@@ -57,8 +56,6 @@ class CareerMap():
             e_list = self.w2v[ self.jobCol.isin(exclude) ].index.values
         else:
             e_list = None
-        # except:
-        #     raise AssertionError("Title not found in dataset")
 
         # Average the coordinates corresponding to those indices
         average = self.avg(i_list)
@@ -101,21 +98,21 @@ class CareerMap():
         calc = dot_product/a_norm/b_norm
         return calc
 
+if __name__ == '__main__':
+    # Create the word2vec map
+    w2v = pd.read_json('pos_w2v_matrix.json')
+    cMap = CareerMap(w2v, 'posTitle')
 
-# Create the word2vec map
-w2v = pd.read_json('pos_w2v_matrix.json')
-cMap = CareerMap(w2v, 'posTitle')
+    # Start using it!
+    # job = cMap.combJob(['Engineer', 'Developer', '.NET Developer', 'Senior Developer'])
+    # job = cMap.combJob(['Engineer','Senior'])
+    job = cMap.analogy('Junior Engineer', 'Senior Engineer', 'Junior Developer', approx=False)
 
-# Start using it!
-# job = cMap.combJob(['Engineer', 'Developer', '.NET Developer', 'Senior Developer'])
-# job = cMap.combJob(['Engineer','Senior'])
-job = cMap.analogy('Junior Engineer', 'Senior Engineer', 'Junior Developer', approx=False)
+    dot = cMap.getPoint(title='.')
+    sD = cMap.getPoint(title='Senior Developer')
 
-dot = cMap.getPoint(title='.')
-sD = cMap.getPoint(title='Senior Developer')
-
-print('dot:', cMap.cosSim(job, dot))
-print('sD:', cMap.cosSim(job, sD))
+    print('dot:', cMap.cosSim(job, dot))
+    print('sD:', cMap.cosSim(job, sD))
 
 # 1                          .NET Developer
 # 2                 .NET Software Developer
