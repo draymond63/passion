@@ -4,7 +4,7 @@ from w2v_use import CareerMap
 
 def testAnalogy(cm, a, b, c, d):
     guess = cm.analogy(a, b, c)
-    # print(guess)
+    print(guess)
     return int(d == guess)
 
 analogies = [
@@ -17,13 +17,16 @@ analogies = [
 if __name__ == '__main__':
     # Create the word2vec map
     w2v = pd.read_json('pos_w2v_matrix.json')
-    cMap = CareerMap(w2v, 'posTitle')
+    cMap = CareerMap(w2v, jobColumn='posTitle')
     # Keep track of how well we do
     score = 0
+    # Test each analogy
     for l in analogies:
         score += testAnalogy(cMap, *l)
 
     print('Score:', score*100/len(analogies), '%')
+
+    print(cMap.cosSim('Tactical Pricing Analyst', 'Senior Engineer'))
 
 # 1                          .NET Developer
 # 2                 .NET Software Developer
