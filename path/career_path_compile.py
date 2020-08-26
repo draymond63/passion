@@ -34,7 +34,7 @@ for i in range(len(df) - 1):
 
     # Add the current edge it
     # If the next job is from the same person and they didn't start two jobs at once
-    if cRow['memberUrn'] == nRow['memberUrn'] and cRow['startDate'] != nRow['startDate']:
+    if cRow['memberUrn'] == nRow['memberUrn'] and cRow['startDate'] != nRow['startDate'] and cRow['posTitle'] != nRow['posTitle']:
         preReq = nRow['posTitle']
         # If the job is already prerequisite that has been recorded, add 1 the edge's strength
         if preReq in graph[title]:
@@ -43,7 +43,7 @@ for i in range(len(df) - 1):
         else:
             graph[title][preReq] = 1
 
-# ? REMOVE ALL GRAPHS OF WEIGHT 1
+# ? REMOVE ALL EDGES OF WEIGHT 1
 
 import json
 

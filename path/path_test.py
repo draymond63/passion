@@ -1,8 +1,22 @@
 from path_use import CareerPath
+import plotly.express as px
+
+def print_tree(tree):
+    jobs = list(tree)
+    parents = ["" for _ in range(len(jobs))]
+
+    for job in tree:
+        for preReq in tree[job]:
+            i = jobs.index(preReq)
+            parents[i] = job
+
+    fig = px.treemap(
+        names = jobs,
+        parents = parents
+    )
+    fig.show()
 
 graph = CareerPath('./career_path_graph.json')
-
-print(graph.max_weight, graph.avg_weight)
 
 # graph = CareerPath(dictionary={
 #     'A': {'B': 2, 'E': 1},
@@ -12,7 +26,10 @@ print(graph.max_weight, graph.avg_weight)
 #     'E': {'C': 1}
 # })
 
-treeReqs = graph.get_path('ceo', min_edge_weight=2, node_limit=50)
+# tree = graph.get_path('ceo', min_edge_weight=6, node_child_limit=3)
+# tree = graph.get_path_capped('senior project manager', 10)
+tree = graph.get_path_capped('product manager', 10)
 
-# print(treeReqs)
-# print(len(treeReqs))
+print_tree(tree)
+print(tree)
+print(len(tree))

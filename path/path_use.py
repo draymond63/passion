@@ -2,16 +2,18 @@ import json
 
 class CareerPath():
     def __init__(self, file_name=None, dictionary=None):
+        # * Store json as a dictionary
         if file_name:
             with open(file_name, 'r') as json_file:
                 self.data = json.load(json_file)
         elif dictionary:
             self.data = dictionary
 
-        # Calculate average & max weights of the edges
-        self.max_weight = 0
+        # * Calculate average & max weights of the edges
+        self.max_weight = 0 # Occurs at ('senior project manager', 'project manager')
         total_sum = 0
         total_count = 0
+        # Iterate through each edge
         for key in self.data:
             node = self.data[key]
             for edge in node:
@@ -69,4 +71,19 @@ class CareerPath():
             # Remove this job from the queue
             queue = queue[1:]
 
+        return tree
+
+    def get_path_capped(self, title, soft_max, hard_max=20, max_child=3):
+        min_edge = 1
+
+        tree = self.get_path(title, min_edge, node_child_limit=max_child)
+
+        while len(tree) > soft_max:
+            min_edge += 1
+            tree = self.get_path(title, min_edge, hard_max, max_child)
+        
+        # If the job has prereqresuites it should have a tree
+        if len(tree) == 1 and self.data[title] != []:
+            tree = self.get_path(title, min_edge-1, hard_max, max_child)
+        
         return tree
