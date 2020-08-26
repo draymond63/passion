@@ -1,11 +1,11 @@
-import json
+from json import load
 
 class CareerPath():
     def __init__(self, file_name=None, dictionary=None):
         # * Store json as a dictionary
         if file_name:
             with open(file_name, 'r') as json_file:
-                self.data = json.load(json_file)
+                self.data = load(json_file)
         elif dictionary:
             self.data = dictionary
 
@@ -43,6 +43,7 @@ class CareerPath():
         
     # Returns a nested dictionary of all the paths
     def get_path(self, title, min_edge_weight=1, node_limit=None, node_child_limit=None):
+        title = title.lower()
         assert title in self.data, f"Given title {title} is not in the graph"
         # Tree that's going to be the path that is returned
         tree = {}
@@ -73,8 +74,9 @@ class CareerPath():
 
         return tree
 
-    def get_path_capped(self, title, soft_max, hard_max=20, max_child=3):
-        min_edge = 1
+    def get_path_capped(self, title, soft_max, hard_max=20, hard_min=3, max_child=3):
+        title = title.lower()
+        min_edge = 0
 
         tree = self.get_path(title, min_edge, node_child_limit=max_child)
 
@@ -83,7 +85,7 @@ class CareerPath():
             tree = self.get_path(title, min_edge, hard_max, max_child)
         
         # If the job has prereqresuites it should have a tree
-        if len(tree) == 1 and self.data[title] != []:
+        if len(tree) <= hard_min and self.data[title] != []:
             tree = self.get_path(title, min_edge-1, hard_max, max_child)
         
         return tree

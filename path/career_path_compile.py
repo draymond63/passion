@@ -1,5 +1,5 @@
-# Libraries used to train models & manipulate data
 import pandas as pd
+from json import dump
 
 ### Kaggle import: https://github.com/Kaggle/kaggle-api
 # kaggle datasets download -f dump.csv --unzip killbot/linkedin-profiles-and-jobs-data
@@ -45,7 +45,5 @@ for i in range(len(df) - 1):
 
 # ? REMOVE ALL EDGES OF WEIGHT 1
 
-import json
-
 with open('career_path_graph.json', 'w') as file:
-    json.dump(graph, file)
+    dump(graph, file)
