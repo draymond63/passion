@@ -3,5 +3,7 @@
 *.json
 *.pdf
 */testing/
+*/node_modules/
+*/crawledProfiles/
 
 *__pycache__
