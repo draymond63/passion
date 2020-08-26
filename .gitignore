@@ -2,3 +2,6 @@
 *.xls
 *.json
 *.pdf
+*/testing/
+
+*__pycache__
