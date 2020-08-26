@@ -7,10 +7,40 @@ class CareerPath():
                 self.data = json.load(json_file)
         elif dictionary:
             self.data = dictionary
+
+        # Calculate average & max weights of the edges
+        self.max_weight = 0
+        total_sum = 0
+        total_count = 0
+        for key in self.data:
+            node = self.data[key]
+            for edge in node:
+                total_count += 1
+                total_sum += node[edge]
+                self.max_weight = max(self.max_weight, node[edge])
+        
+        self.avg_weight = total_sum / total_count
+
+    def _restrict_jobs(self, job_reqs, tree, min_edge_weight, node_child_limit):
+        new_job_reqs = dict()
+        # Get rid of jobs we have already seen or not strong enough
+        for job in job_reqs:
+            # Each job is the title which is the key for the strength of that edge
+            job_weight = job_reqs[job]
+            if job not in tree and job_weight >= min_edge_weight:
+                new_job_reqs[job] = job_weight
+
+        # Get ride of weaker jobs until we reached a limit
+        if node_child_limit != None:
+            while len(new_job_reqs) > node_child_limit:
+                # Delete the smallest element from the dictionary
+                del new_job_reqs[min(new_job_reqs)]
+
+        # Return the job titles, not the weights
+        return list(new_job_reqs)
         
     # Returns a nested dictionary of all the paths
-    # ! LIMIT NUMBER OF NODES SHOWN
-    def get_path(self, title, min_edge_weight=1, node_limit=None):
+    def get_path(self, title, min_edge_weight=1, node_limit=None, node_child_limit=None):
         assert title in self.data, f"Given title {title} is not in the graph"
         # Tree that's going to be the path that is returned
         tree = {}
@@ -20,38 +50,23 @@ class CareerPath():
         node_counter = 0
 
         while len(queue):
-            # Grab the dict of prereqs for the next job in queue
-            dict_job_reqs = self.data[ queue[0] ]
-            new_job_reqs = list()
+            # Grab the dict of prereqs and srink it to satisfy constraints
+            job_reqs = self._restrict_jobs(self.data[queue[0]], tree, min_edge_weight, node_child_limit)
 
-            # Get rid of jobs we have already seen or not strong enough
-            for job in dict_job_reqs:
-                # Each job is the title which is the key for the strength of that edge
-                job_weight = dict_job_reqs[job]
-                if job not in tree and job_weight >= min_edge_weight:
-                    new_job_reqs.append(job)
-
-            # Add new_job_reqs as children to the tree
-            tree[queue[0]] = new_job_reqs
+            # Add job_reqs as children to the tree
+            tree[queue[0]] = job_reqs
             # Add jobs to the queue
-            if node_counter < node_limit:
-                queue.extend(new_job_reqs)
+            if not node_limit or node_counter < node_limit:
+                queue.extend(job_reqs)
             # If the soft limit has been reached add the prereqs to the tree and end it
             else:
                 for job in queue:
                     tree[job] = []
                 return tree
-
+            
             # Add the number of nodes that are going to be added to the tree
-            node_counter += len(new_job_reqs)
+            node_counter += len(job_reqs)
             # Remove this job from the queue
             queue = queue[1:]
 
-
         return tree
-
-
-
-
-
-

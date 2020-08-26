@@ -2,6 +2,8 @@ from path_use import CareerPath
 
 graph = CareerPath('./career_path_graph.json')
 
+print(graph.max_weight, graph.avg_weight)
+
 # graph = CareerPath(dictionary={
 #     'A': {'B': 2, 'E': 1},
 #     'B': {'D': 3},
@@ -10,7 +12,7 @@ graph = CareerPath('./career_path_graph.json')
 #     'E': {'C': 1}
 # })
 
-treeReqs = graph.get_path('ceo', min_edge_weight=2, node_limit=10)
+treeReqs = graph.get_path('ceo', min_edge_weight=2, node_limit=50)
 
-print(treeReqs)
-print(len(treeReqs))
+# print(treeReqs)
+# print(len(treeReqs))
