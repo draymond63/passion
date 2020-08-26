@@ -74,7 +74,7 @@ class CareerPath():
 
         return tree
 
-    def get_path_capped(self, title, soft_max, hard_max=20, hard_min=3, max_child=3):
+    def get_path_capped(self, title, soft_max=10, hard_max=20, hard_min=3, max_child=3):
         title = title.lower()
         min_edge = 0
 
@@ -85,7 +85,7 @@ class CareerPath():
             tree = self.get_path(title, min_edge, hard_max, max_child)
         
         # If the job has prereqresuites it should have a tree
-        if len(tree) <= hard_min and self.data[title] != []:
+        if len(tree) < hard_min and self.data[title] != []:
             tree = self.get_path(title, min_edge-1, hard_max, max_child)
         
         return tree

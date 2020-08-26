@@ -18,7 +18,14 @@ def print_tree(tree):
     )
     fig.show()
 
-def tree_stats(graph, soft_max=10):
+
+### DATA
+# CHILD = 2
+# max: 10 ==> {'customer service representative (max)': 22, 'technical assistant (min)': 2, 'avg': 17.9985}
+# CHILD = 3
+# max: 10 ==> {'marketing and public relations intern (max)': 23, 'technical assistant (min)': 2, 'avg': 18.8613}
+# max: 5  ==> {'marketing and public relations intern (max)': 23, 'technical assistant (min)': 2, 'avg': 18.8192}
+def tree_stats(graph, soft_max=10, save_data=True):
     jobs = list(graph.data.keys())
     sizes = {}
 
@@ -26,20 +33,23 @@ def tree_stats(graph, soft_max=10):
     for i in tqdm(range(len(jobs))):
         job = jobs[i]
         # Only add graphs where there are children
-        if graph.data[job] != []:
-            tree = graph.get_path_capped(job, soft_max)
+        if graph.data[job] != {}:
+            tree = graph.get_path_capped(job, soft_max, hard_min=2)
             sizes[job] = len(tree) 
     
     # Save the list for future use
-    with open(f'./testing/path_sizes_{soft_max}.json', 'w') as file:
-        dump(sizes, file)
+    if save_data:
+        with open(f'./testing/path_sizes_{soft_max}.json', 'w') as file:
+            dump(sizes, file)
     # Return some stats
     avg = sum(sizes.values()) / len(sizes)
+    max_key = max(sizes, key=sizes.get)
+    min_key = min(sizes, key=sizes.get)
 
     return {
-        max(sizes): sizes[max(sizes)], 
-        min(sizes): sizes[min(sizes)], 
-        'avg': avg
+        f'{max_key} (max)': sizes[max_key],
+        f'{min_key} (min)': sizes[min_key], 
+        'avg': round(avg, 4)
     }
 
 graph = CareerPath('./career_path_graph.json')
@@ -55,5 +65,7 @@ graph = CareerPath('./career_path_graph.json')
 # tree = graph.get_path_capped('product manager', 10)
 # tree = graph.get_path_capped('CFO', 10)
 
-print(tree_stats(graph))
+# print(tree_stats(graph, 5, save_data=False))
 
+tree = graph.get_path_capped('software engineer')
+print_tree(tree)

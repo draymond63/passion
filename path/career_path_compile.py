@@ -20,7 +20,6 @@ df = df.drop_duplicates()
 df = df.sort_values(['memberUrn', 'startDate'], ascending=False)
 
 graph = {}
-
 nRow = df.iloc[0] # Set initial value fo the next row so the cRow will be at 0
 
 for i in range(len(df) - 1):
@@ -42,8 +41,6 @@ for i in range(len(df) - 1):
         # If the prerequisite is new for this job, create the edge and give it a weight of 1
         else:
             graph[title][preReq] = 1
-
-# ? REMOVE ALL EDGES OF WEIGHT 1
 
 with open('career_path_graph.json', 'w') as file:
     dump(graph, file)
