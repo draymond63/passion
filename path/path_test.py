@@ -18,14 +18,18 @@ def print_tree(tree):
     )
     fig.show()
 
-
 ### DATA
 # CHILD = 2
 # max: 10 ==> {'customer service representative (max)': 22, 'technical assistant (min)': 2, 'avg': 17.9985}
-# CHILD = 3
+# HARD MAX
+# hard: 10==> {'cashier (max)': 13, 'technical assistant (min)': 2, 'avg': 10.8444} (soft max = 5)
+# hard: 5 ==> {'guest speaker (max)': 8, 'technical assistant (min)': 2, 'avg': 6.7050}
+# hard: 5 ==> {'guest speaker (max)': 8, 'technical assistant (min)': 2, 'avg': 6.5172} (soft max = 3)
+# DEFAULT (CHILD=3, HARD MAX=20, HARD MIN=3)
 # max: 10 ==> {'marketing and public relations intern (max)': 23, 'technical assistant (min)': 2, 'avg': 18.8613}
 # max: 5  ==> {'marketing and public relations intern (max)': 23, 'technical assistant (min)': 2, 'avg': 18.8192}
-def tree_stats(graph, soft_max=10, save_data=True):
+
+def tree_stats(graph, soft_max=10, hard_min=3, hard_max=10, save_data=False):
     jobs = list(graph.data.keys())
     sizes = {}
 
@@ -33,8 +37,8 @@ def tree_stats(graph, soft_max=10, save_data=True):
     for i in tqdm(range(len(jobs))):
         job = jobs[i]
         # Only add graphs where there are children
-        if graph.data[job] != {}:
-            tree = graph.get_path_capped(job, soft_max, hard_min=2)
+        if graph.data[job]:
+            tree = graph.get_path_capped(job, soft_max, hard_min=hard_min, hard_max=hard_max)
             sizes[job] = len(tree) 
     
     # Save the list for future use
@@ -53,19 +57,18 @@ def tree_stats(graph, soft_max=10, save_data=True):
     }
 
 graph = CareerPath('./path/career_path_graph.json')
-
-# graph = CareerPath(dictionary={
-#     'a': {'b': 1, 'c': 2},
-#     'b': {'c': 3},  
-#     'c': {}
-# })
+# print(tree_stats(graph, 8, hard_max=10))
 
 # tree = graph.get_path('ceo', min_edge_weight=6, node_child_limit=3)
 # tree = graph.get_path_capped('senior project manager', 10)
 # tree = graph.get_path_capped('product manager', 10)
 # tree = graph.get_path_capped('CFO', 10)
 
-# print(tree_stats(graph, 5, save_data=False))
-
-tree = graph.get_path_capped('software engineer')
+tree = graph.get_path('cfo', 1)
+print_tree(tree)
+tree = graph.get_path('cfo', 2)
+print_tree(tree)
+tree = graph.get_path('cfo', 3)
+print_tree(tree)
+tree = graph.get_path('cfo', 4)
 print_tree(tree)

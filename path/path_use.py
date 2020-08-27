@@ -42,7 +42,7 @@ class CareerPath():
         return list(new_job_reqs)
         
     # Returns a nested dictionary of all the paths
-    def get_path(self, title, min_edge_weight=1, node_limit=None, node_child_limit=None):
+    def _get_path(self, title, min_edge_weight=1, node_limit=None, node_child_limit=None):
         title = title.lower()
         assert title in self.data, f"Given title {title} is not in the graph"
         # Tree that's going to be the path that is returned
@@ -78,14 +78,33 @@ class CareerPath():
         title = title.lower()
         min_edge = 0
 
-        tree = self.get_path(title, min_edge, node_child_limit=max_child)
+        tree = self._get_path(title, min_edge, node_child_limit=max_child)
 
         while len(tree) > soft_max:
             min_edge += 1
-            tree = self.get_path(title, min_edge, hard_max, max_child)
+            tree = self._get_path(title, min_edge, hard_max, max_child)
         
         # If the job has prereqresuites it should have a tree
         if len(tree) < hard_min and self.data[title] != []:
-            tree = self.get_path(title, min_edge-1, hard_max, max_child)
+            tree = self._get_path(title, min_edge-1, hard_max, max_child)
         
         return tree
+
+    def get_path_small(self, title):
+        return self.get_path_capped(title, 3, 5)
+    def get_path_medium(self, title):
+        return self.get_path_capped(title, 5, 10)
+    def get_path_big(self, title):
+        return self.get_path_capped(title, 10, 20)
+
+    def get_path(self, title, size=1):
+        assert size in [1, 2, 3, 4], f'Size request must be 1-4, not {size}'
+
+        if size == 1:
+            return self.get_path_small(title)
+        if size == 2:
+            return self.get_path_medium(title)
+        if size == 3:
+            return self.get_path_big(title)
+        else:
+            return self.get_path_capped(title, 20, None, max_child=5)
