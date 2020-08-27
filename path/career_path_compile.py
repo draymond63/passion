@@ -3,7 +3,7 @@ from json import dump
 
 ### Kaggle import: https://github.com/Kaggle/kaggle-api
 # kaggle datasets download -f dump.csv --unzip killbot/linkedin-profiles-and-jobs-data
-df = pd.read_csv(r'../dump.csv')
+df = pd.read_csv(r'./dump.csv')
 # Filter for useful entries 
 df = df.filter(items=['memberUrn', 'posTitle', 'startDate'])
 # Simplify the member id

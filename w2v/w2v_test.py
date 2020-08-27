@@ -16,7 +16,7 @@ analogies = [
 
 if __name__ == '__main__':
     # Create the word2vec map
-    w2v = pd.read_json('pos_w2v_matrix.json')
+    w2v = pd.read_json('./w2v/pos_w2v_matrix.json')
     cMap = CareerMap(w2v, jobColumn='posTitle')
     # Keep track of how well we do
     score = 0

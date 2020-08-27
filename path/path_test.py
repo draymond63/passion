@@ -39,7 +39,7 @@ def tree_stats(graph, soft_max=10, save_data=True):
     
     # Save the list for future use
     if save_data:
-        with open(f'./testing/path_sizes_{soft_max}.json', 'w') as file:
+        with open(f'./path/testing/path_sizes_{soft_max}.json', 'w') as file:
             dump(sizes, file)
     # Return some stats
     avg = sum(sizes.values()) / len(sizes)
@@ -52,7 +52,7 @@ def tree_stats(graph, soft_max=10, save_data=True):
         'avg': round(avg, 4)
     }
 
-graph = CareerPath('./career_path_graph.json')
+graph = CareerPath('./path/career_path_graph.json')
 
 # graph = CareerPath(dictionary={
 #     'a': {'b': 1, 'c': 2},
