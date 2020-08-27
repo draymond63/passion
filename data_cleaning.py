@@ -13,10 +13,41 @@ df = df.filter(items=['memberUrn', 'posTitle', 'startDate', 'endDate'])
 df['memberUrn'] = df['memberUrn'].apply(lambda x: int(x.split(':')[-1]))
 # Lowercase every job
 df['posTitle'] = df['posTitle'].str.lower()
+
+
+# * Remove acronyms
+df = df.replace(
+    ['cio', 'ceo', 'cfo', 'coo', 'cmo', 'cto'],
+    ['chief information officer',
+    'chief executive officer',
+    'chief financial officer',
+    'chief operating officer',
+    'chief marketing officer',
+    'chief technology officer']
+)
+
+# * Remove anything after an AND, & or (
+def remove_after(job, removal):
+    if removal in job:
+        print(job)
+        job = job.split(removal)[0]
+        return job.strip()
+    else:
+        return job
+
+df['posTitle'] = df['posTitle'].apply(lambda x: remove_after(x, 'and'))
+df['posTitle'] = df['posTitle'].apply(lambda x: remove_after(x, '&'))
+df['posTitle'] = df['posTitle'].apply(lambda x: remove_after(x, '('))
+
+# * Final touches
 # Remove entries that don't appear that often
 df = df[df.groupby('posTitle')['posTitle'].transform('count') >= rep_times]
+# Drop all duplicates the NAs except for the end dates
+df = df.dropna(subset=['memberUrn', 'posTitle', 'startDate']) 
 df = df.drop_duplicates()
-
+# Sort values just for nicety
+df = df.sort_values(['memberUrn', 'startDate'], ascending=False)
+df = df.reset_index().drop('index', axis=1)
+# Save data
 df.to_csv('./dump_cleaned.csv')
-
 print(df.head())

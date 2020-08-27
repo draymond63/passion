@@ -4,17 +4,17 @@
 
 import pandas as pd
 import numpy as np
-from sklearn.cluster import AgglomerativeClustering
+from sklearn.cluster import AgglomerativeClustering # KMeans
 
 def tfidf_cluster(num_clusters, vecs=None):
     # Data
     if not vecs:
         vecs = pd.read_csv('./tfidf/tfidf_positions.csv', header=None)
     # Clusterer
-    return AgglomerativeClustering().fit(vecs)
-
+    return AgglomerativeClustering(num_clusters).fit_predict(vecs)
 
 if __name__ == "__main__":
     result = tfidf_cluster(50)
     print(result)
-    print(np.array(tfidf_cluster(50)))
+    print(type(result))
+    

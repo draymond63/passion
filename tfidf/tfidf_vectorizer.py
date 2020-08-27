@@ -2,12 +2,15 @@
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-def tfidf_vects(file_name=None):
+def tfidf_vecs(file_name=None):
     ### Kaggle import: https://github.com/Kaggle/kaggle-api
     # kaggle datasets download -f dump.csv --unzip killbot/linkedin-profiles-and-jobs-data
-    pos = pd.read_csv(r'../dump_cleaned.csv')
+    pos = pd.read_csv(r'./dump_cleaned.csv')
     # Convert to a series
     pos = pd.Series(pos['posTitle'])
+    pos = pos.drop_duplicates() # There are multiple from each job so remove them
+    pos = pos.reset_index()['posTitle'] # Reset the index so things are order 1, 2, 3,...
+    print(pos.shape)
 
     # * Vectorize position titles using tf-idf (Term frequency -> inverse document frequency)
     # 0.1 -> 2    | 0.01 -> 58    | 0.001 -> 407    | 0 -> 6738
@@ -15,10 +18,14 @@ def tfidf_vects(file_name=None):
     x = v.fit_transform(pos)
     vecs = pd.DataFrame(x.toarray())
 
+    # Reattach the names to the data
+    df = pd.concat([pos, vecs], axis=1)
+    print(df.head(3))
+    print(df.shape)
+
     if file_name:
-        vecs.to_csv(file_name) # Save it for other files
-    else:
-        return vecs
+        df.to_csv(f'./tfidf/{file_name}', index=False) # Save it for other files
+    return df
 
 if __name__ == "__main__":
-    tfidf_vects('tfidf_positions.csv')
+    tfidf_vecs('tfidf_positions.csv')
