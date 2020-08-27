@@ -3,9 +3,18 @@ from pandas import DataFrame
 from tqdm import tqdm
 import os
 
+# print(len(os.listdir('./crawledProfiles'))) # 410
+
+# * Initial starting profiles
+# "https://www.linkedin.com/in/draymond63/",
+# "https://www.linkedin.com/in/smbankole/",
+# "https://www.linkedin.com/in/isabel-ql-07a2aa90/",
+# "https://www.linkedin.com/in/chidinwaogu/",
+# "https://www.linkedin.com/in/ngen-sophorn-4075a2155/"
+
 jobs = DataFrame(columns=['user_id', 'posTitle', 'startDate', 'endDate'])
 
-directory = './crawledProfiles'
+directory = './scraping/crawledProfiles'
 pbar = tqdm(total=len(os.listdir(directory)))
 
 for filename in os.listdir(directory):
