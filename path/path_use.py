@@ -107,4 +107,4 @@ class CareerPath():
         if size == 3:
             return self.get_path_big(title)
         else:
-            return self.get_path_capped(title, 20, None, max_child=5)
+            return self._get_path(title, min_edge_weight=2)

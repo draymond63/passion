@@ -1,20 +1,13 @@
 import pandas as pd
 from json import dump
 
+# ! GROUP USING TFIDF
+
 ### Kaggle import: https://github.com/Kaggle/kaggle-api
 # kaggle datasets download -f dump.csv --unzip killbot/linkedin-profiles-and-jobs-data
-df = pd.read_csv(r'./dump.csv')
+df = pd.read_csv(r'./dump_cleaned.csv')
 # Filter for useful entries 
 df = df.filter(items=['memberUrn', 'posTitle', 'startDate'])
-# Simplify the member id
-df['memberUrn'] = df['memberUrn'].apply(lambda x: int(x.split(':')[-1]))
-# Lowercase every job
-df['posTitle'] = df['posTitle'].str.lower()
-
-# * Only values that have multiple inputs
-rep_times = 3 # Only jubs that appear 3 times or more
-df = df[df.groupby('posTitle')['posTitle'].transform('count') >= rep_times]
-df = df.drop_duplicates()
 
 # Sort values by member, and then by startDate
 df = df.sort_values(['memberUrn', 'startDate'], ascending=False)
