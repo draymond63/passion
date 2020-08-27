@@ -4,6 +4,6 @@
 *.pdf
 */testing/
 */node_modules/
-scraping/
+/scraping/
 
 *__pycache__
