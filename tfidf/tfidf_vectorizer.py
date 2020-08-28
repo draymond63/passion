@@ -9,6 +9,7 @@ def tfidf_vecs(file_name=None):
     # Convert to a series
     pos = pd.Series(pos['posTitle'])
     pos = pos.drop_duplicates() # There are multiple from each job so remove them
+    pos = pos.dropna() # There shouldn't be NAs but there are...
     pos = pos.reset_index()['posTitle'] # Reset the index so things are order 1, 2, 3,...
     print(pos.shape)
 
@@ -18,8 +19,16 @@ def tfidf_vecs(file_name=None):
     x = v.fit_transform(pos)
     vecs = pd.DataFrame(x.toarray())
 
+    # Save the vocabulary of the Tfidf vectorizer in a list for the df
+    vocab = [0] * len(v.vocabulary_)
+    for key in v.vocabulary_:
+        index = v.vocabulary_[key]
+        vocab[index] = key
+    
     # Reattach the names to the data
     df = pd.concat([pos, vecs], axis=1)
+    # Rename the columns so each tfidf coordinate corresponds to a word
+    df.columns = ['posTitle', *vocab]
     print(df.head(3))
     print(df.shape)
 

@@ -26,24 +26,17 @@ df = df.replace(
     'chief technology officer']
 )
 
-# * Remove anything after an AND, & or (
-def remove_after(job, removal):
-    if removal in job:
-        print(job)
-        job = job.split(removal)[0]
-        return job.strip()
-    else:
-        return job
-
-df['posTitle'] = df['posTitle'].apply(lambda x: remove_after(x, 'and'))
-df['posTitle'] = df['posTitle'].apply(lambda x: remove_after(x, '&'))
-df['posTitle'] = df['posTitle'].apply(lambda x: remove_after(x, '('))
+# * Character removal and entry splitting
+# Remove the end of entries with the following symbols
+df['posTitle'] = df['posTitle'].apply(lambda x: x.split('(')[0].strip())
+df['posTitle'] = df['posTitle'].apply(lambda x: x.split(',')[0].strip())
+df['posTitle'] = df['posTitle'].apply(lambda x: x.split('|')[0].strip())
 
 # * Final touches
 # Remove entries that don't appear that often
 df = df[df.groupby('posTitle')['posTitle'].transform('count') >= rep_times]
 # Drop all duplicates the NAs except for the end dates
-df = df.dropna(subset=['memberUrn', 'posTitle', 'startDate']) 
+df = df.dropna(subset=['memberUrn', 'posTitle', 'startDate'])
 df = df.drop_duplicates()
 # Sort values just for nicety
 df = df.sort_values(['memberUrn', 'startDate'], ascending=False)
@@ -51,3 +44,4 @@ df = df.reset_index().drop('index', axis=1)
 # Save data
 df.to_csv('./dump_cleaned.csv')
 print(df.head())
+print(df.shape)
