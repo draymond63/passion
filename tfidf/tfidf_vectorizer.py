@@ -2,10 +2,10 @@
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-def tfidf_vecs(file_name=None):
+def tfidf_vecs(og_file='dump_cleaned.csv', new_file='tfidf_positions.csv'):
     ### Kaggle import: https://github.com/Kaggle/kaggle-api
     # kaggle datasets download -f dump.csv --unzip killbot/linkedin-profiles-and-jobs-data
-    pos = pd.read_csv(r'./dump_cleaned.csv')
+    pos = pd.read_csv(og_file)
     # Convert to a series
     pos = pd.Series(pos['posTitle'])
     pos = pos.drop_duplicates() # There are multiple from each job so remove them
@@ -13,9 +13,12 @@ def tfidf_vecs(file_name=None):
     pos = pos.reset_index()['posTitle'] # Reset the index so things are order 1, 2, 3,...
     print(pos.shape)
 
+    # Words that should be ignored by the tokenizer
+    ignored = ['the', 'and', 'acting', 'of', 'in', 'via']
+
     # * Vectorize position titles using tf-idf (Term frequency -> inverse document frequency)
     # 0.1 -> 2    | 0.01 -> 58    | 0.001 -> 407    | 0 -> 6738
-    v = TfidfVectorizer(min_df=0.001) # 0.01 without cell above, 0.001 with
+    v = TfidfVectorizer(min_df=0.001, stop_words=ignored) # 0.01 without cell above, 0.001 with
     x = v.fit_transform(pos)
     vecs = pd.DataFrame(x.toarray())
 
@@ -32,9 +35,9 @@ def tfidf_vecs(file_name=None):
     print(df.head(3))
     print(df.shape)
 
-    if file_name:
-        df.to_csv(f'./tfidf/{file_name}', index=False) # Save it for other files
+    if new_file:
+        df.to_csv(f'./tfidf/{new_file}', index=False) # Save it for other files
     return df
 
 if __name__ == "__main__":
-    tfidf_vecs('tfidf_positions.csv')
+    tfidf_vecs()

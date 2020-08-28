@@ -7,12 +7,6 @@ from sklearn.cluster import AgglomerativeClustering, KMeans
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
-# * Found from graph functions
-NUMBER_OF_CLUSTERS = 50
-
-df = pd.read_csv('./tfidf/tfidf_positions.csv')
-vecs = df.drop('posTitle', axis=1)
-
 # * Clustering algorithm
 def hierachical_cluster(data, threshold=1):
     # Clusterer
@@ -24,7 +18,7 @@ def hierachical_cluster(data, threshold=1):
     return cl.fit_predict(data)
 
 # * Graphing KMeans clustering as a function of n_clusters
-def graph_kmeans(min_k, max_k, jump=1):
+def graph_kmeans(data, min_k, max_k, jump=1):
     # Iterate through each possible number of clusters
     distortions = []
     for i in tqdm(range(min_k, max_k, jump)):
@@ -33,7 +27,7 @@ def graph_kmeans(min_k, max_k, jump=1):
             n_init=10, max_iter=300,
             tol=1e-04, random_state=0
         )
-        km.fit_predict(vecs)
+        km.fit_predict(data)
         distortions.append(km.inertia_)
 
     # Save the results in case things go south
@@ -45,7 +39,10 @@ def graph_kmeans(min_k, max_k, jump=1):
     plt.show()
 
 # * Using clustering to append the cleaned dump with job key
-def append_dump():
+def append_dump(dump_file='dump_cleaned.csv', tfidf_file='tfidf/tfidf_positions.csv'):
+    # Grab the data
+    df = pd.read_csv(tfidf_file)
+    vecs = df.drop('posTitle', axis=1)
     # Result in is an np.ndarray of numerical categories
     groups = hierachical_cluster(vecs)
     groups = pd.Series(groups, name='groupNum')
@@ -76,18 +73,14 @@ def append_dump():
         jobKeys[groupNum] = keys
 
     # * Merging into the dump_cleaned
-    dump = pd.read_csv('dump_cleaned.csv')
+    dump = pd.read_csv(dump_file)
     # Only append the dump if the data isn't already there
     if 'groupNum' not in dump:
         # Merge the group numbers on the posTitles first
         dump = pd.merge(dump, categories.filter(['posTitle', 'groupNum']), on='posTitle')
-        # Drop the unnamed column
-        dump = dump.drop(columns=dump.columns[0])
         # Merge the job keys on the newly joined group numbers
         jobKeys = pd.Series(jobKeys, name='jobKeys')
         dump = pd.merge(dump, jobKeys, left_on='groupNum', right_index=True)
-        # Drop the unnamed column
-        dump = dump.drop(columns=dump.columns[0])
         # Sort the rows to bring it back to where it was before
         dump = dump.sort_values(['memberUrn', 'startDate'], ascending=False)
         # Wewrite the dump to include the group number and job keys
@@ -96,5 +89,4 @@ def append_dump():
     print(dump.head(10))
 
 if __name__ == "__main__":
-    # graph_kmeans(10, 500, 10)
     append_dump()
