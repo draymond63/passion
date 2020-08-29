@@ -46,30 +46,39 @@ def create_w2v_map(og_file='w2v/w2v_train.json', new_file='w2v/pos_w2v_matrix.js
     w2v_matrix.to_json(new_file)
 
 
-def display_map(og_file='w2v/pos_w2v_matrix.json', title_options=''):
+def display_map(og_file='w2v/pos_w2v_matrix.json', title_options='', dump_file='dump_cleaned.csv'):
     # We need to shrink the dimensionality and display it
     from sklearn.manifold import TSNE
-    import plotly.graph_objects as go
+    import plotly.express as px
     data = pd.read_json(og_file)
     # get_weights returns weights & biases -> we want the 2nd matrix of weights (w2v_inner_dim by # of jobs)
     w2v_matrix = data.drop(['posTitle'], axis=1)
     titles = data['posTitle']
 
     # Collapse matrix into Nx2
-    tsne = TSNE(n_components=2, random_state=0, verbose=1)
+    tsne = TSNE(n_components=2, random_state=0)
     w2v_visual = tsne.fit_transform(w2v_matrix)
-    # Display data
-    fig = go.Figure()
 
-    fig.add_trace(go.Scatter(
-        x=w2v_visual[:,0], y=w2v_visual[:,1],
-        text=titles, # ? Apparently labels are wrong ?
-        mode='markers',
-        marker_color='rgba(255, 182, 193, .8)'
-    ))
+    dump = pd.read_csv(dump_file)
+    w2v_visual = pd.DataFrame(w2v_visual, columns=['x', 'y'])
+    # Reattach the titles
+    df = w2v_visual.join(data['posTitle'])
+    # Attach the w2v groups
+    df = pd.merge(dump, df, on='posTitle')
+    df = df.filter(['posTitle', 'x', 'y', 'w2vKeyNum'])
+    df = df.drop_duplicates()
+
+    print(df.head(3))
+
+    # Display data
+    fig = px.scatter(df,
+        x='x', y='y',
+        hover_name='posTitle', # ? Apparently labels are wrong ?
+        color='w2vKeyNum'
+    )
     fig.update_layout(title='Word2Vec 2D Career Map ' + title_options)
     fig.show()
 
 if __name__ == "__main__":
-    create_w2v_map(space_dim=25)
+    # create_w2v_map(space_dim=25)
     display_map()

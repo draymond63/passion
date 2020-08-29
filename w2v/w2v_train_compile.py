@@ -6,8 +6,10 @@ def compile_w2v_data(og_file='dump_cleaned.csv', new_file='w2v/w2v_train.json', 
 
     # Group members by position, but save the groupNum as well if we are using keys
     if use_tfidf: 
+        tfidf_num = tfidf_key + 'Num'
         assert tfidf_key in df, f'{tfidf_key} is not in {og_file}'
-        train = df.groupby(['jobKey', 'groupNum'])['memberUrn'].apply(list)
+        assert tfidf_num in df, f'{tfidf_num} is not in {og_file}'
+        train = df.groupby([tfidf_key, tfidf_num])['memberUrn'].apply(list)
     else:
         train = df.groupby(['posTitle'])['memberUrn'].apply(list)
 
