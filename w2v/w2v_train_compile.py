@@ -1,11 +1,12 @@
 # * Used to convert the dump into a form usable by the neural network
 import pandas as pd
 
-def compile_w2v_data(og_file='dump_cleaned.csv', new_file='w2v/w2v_train.json', use_keys=True):
+def compile_w2v_data(og_file='dump_cleaned.csv', new_file='w2v/w2v_train.json', use_tfidf=True, tfidf_key='tfidfKey'):
     df = pd.read_csv(og_file)
 
     # Group members by position, but save the groupNum as well if we are using keys
-    if use_keys: 
+    if use_tfidf: 
+        assert tfidf_key in df, f'{tfidf_key} is not in {og_file}'
         train = df.groupby(['jobKey', 'groupNum'])['memberUrn'].apply(list)
     else:
         train = df.groupby(['posTitle'])['memberUrn'].apply(list)
@@ -29,7 +30,7 @@ def compile_w2v_data(og_file='dump_cleaned.csv', new_file='w2v/w2v_train.json', 
     train['memberUrn'] = train['memberUrn'].apply(multiEncodeMembers)
 
     # * Reordering or numbering, depending on incoming data
-    if not use_keys:
+    if not use_tfidf:
         # Convert the title_key to an integer so that it can be one-hot encoded
         pos_names = df['posTitle'].unique().tolist()
         # Multi=encode the members

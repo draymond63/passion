@@ -3,7 +3,7 @@
 
 from data_cleaning import clean_data
 from tfidf.tfidf_vectorizer import tfidf_vecs
-from tfidf.tfidf_clustering import append_jobkeys
+from clustering import append_jobkeys
 
 from path.career_path_compile import compile_prereq_graph
 
@@ -20,6 +20,7 @@ if __name__ == "__main__":
     if CREATE_DATA:
         clean_data()        # rep_times = 3
         tfidf_vecs()        # min_doc_freq = 0.001
+        # Defaults to appending tfidf keys
         append_jobkeys()    # cluster_threshold = 1
 
     # * Use this graph in the path_test & path_use files

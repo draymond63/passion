@@ -1,15 +1,11 @@
 import pandas as pd
 from json import dump
 
-def compile_prereq_graph(og_file='dump_cleaned.csv', new_file='path/career_path_graph.json', use_keys=False):
+def compile_prereq_graph(og_file='dump_cleaned.csv', new_file='path/career_path_graph.json', title_key='posTitle'):
     # Data
     df = pd.read_csv(og_file)
 
-    if use_keys:
-        assert 'jobKey' in df, f'{og_file} does not contain job keys, please run tfidf_clustering.py'
-        title_key = 'jobKey'
-    else:
-        title_key = 'posTitle'
+    assert title_key in df, f'{og_file} does not contain {title_key}'
 
     # Filter for useful entries
     df = df.filter(items=['memberUrn', title_key, 'startDate'])
@@ -45,4 +41,4 @@ def compile_prereq_graph(og_file='dump_cleaned.csv', new_file='path/career_path_
 
 if __name__ == "__main__":
     compile_prereq_graph()
-    compile_prereq_graph(new_file='path/career_path_graph_keys.json', use_keys=True)
+    compile_prereq_graph(new_file='path/career_path_graph_keys.json', title_key='tfidfKey')
