@@ -46,7 +46,7 @@ def create_w2v_map(og_file='w2v/w2v_train.json', new_file='w2v/pos_w2v_matrix.js
     w2v_matrix.to_json(new_file)
 
 
-def display_map(og_file='w2v/pos_w2v_matrix.json'):
+def display_map(og_file='w2v/pos_w2v_matrix.json', title_options=''):
     # We need to shrink the dimensionality and display it
     from sklearn.manifold import TSNE
     import plotly.graph_objects as go
@@ -67,7 +67,7 @@ def display_map(og_file='w2v/pos_w2v_matrix.json'):
         mode='markers',
         marker_color='rgba(255, 182, 193, .8)'
     ))
-    fig.update_layout(title='Word2Vec 2D Career Map')
+    fig.update_layout(title='Word2Vec 2D Career Map ' + title_options)
     fig.show()
 
 if __name__ == "__main__":
