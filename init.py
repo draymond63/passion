@@ -5,6 +5,7 @@ from data_cleaning import clean_data
 from tfidf.tfidf_vectorizer import tfidf_vecs
 from tfidf.tfidf_clustering import append_dump
 from path.career_path_compile import compile_prereq_graph
+from w2v.w2v_train_compile import compile_w2v_data
 
 
 CREATE_DATA = True
@@ -24,5 +25,5 @@ if __name__ == "__main__":
 
     # ! Convert jupyter notebooks to py files so they can be imported
     if CREATE_W2V_MAP:
-        pass
+        compile_w2v_data()
 
