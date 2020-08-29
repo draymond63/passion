@@ -2,9 +2,8 @@
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-def tfidf_vecs(og_file='dump_cleaned.csv', new_file='tfidf_positions.csv'):
-    ### Kaggle import: https://github.com/Kaggle/kaggle-api
-    # kaggle datasets download -f dump.csv --unzip killbot/linkedin-profiles-and-jobs-data
+def tfidf_vecs(og_file='dump_cleaned.csv', new_file='tfidf_positions.csv', min_doc_freq=0.001):
+    print('\nTFIDF VECTORS')
     pos = pd.read_csv(og_file)
     # Convert to a series
     pos = pd.Series(pos['posTitle'])
@@ -18,7 +17,7 @@ def tfidf_vecs(og_file='dump_cleaned.csv', new_file='tfidf_positions.csv'):
 
     # * Vectorize position titles using tf-idf (Term frequency -> inverse document frequency)
     # 0.1 -> 2    | 0.01 -> 58    | 0.001 -> 407    | 0 -> 6738
-    v = TfidfVectorizer(min_df=0.001, stop_words=ignored) # 0.01 without cell above, 0.001 with
+    v = TfidfVectorizer(min_df=min_doc_freq, stop_words=ignored)
     x = v.fit_transform(pos)
     vecs = pd.DataFrame(x.toarray())
 
@@ -32,7 +31,6 @@ def tfidf_vecs(og_file='dump_cleaned.csv', new_file='tfidf_positions.csv'):
     df = pd.concat([pos, vecs], axis=1)
     # Rename the columns so each tfidf coordinate corresponds to a word
     df.columns = ['posTitle', *vocab]
-    print('\nTFIDF VECTORS')
     print(df.head())
     print(df.shape)
 

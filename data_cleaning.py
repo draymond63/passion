@@ -1,12 +1,9 @@
 import pandas as pd
 
-def clean_data(og_file='dump.csv', new_file='dump_cleaned.csv'):
-    # * The number of times an item has to be seen for it to be included
-    rep_times = 3
-
+def clean_data(og_file='dump.csv', new_file='dump_cleaned.csv', rep_times=3):
     ### Kaggle import: https://github.com/Kaggle/kaggle-api
     # kaggle datasets download -f dump.csv --unzip killbot/linkedin-profiles-and-jobs-data
-    df = pd.read_csv(r'./dump.csv')
+    df = pd.read_csv(r'dump.csv')
 
     # Filter for useful entries 
     df = df.filter(items=['memberUrn', 'posTitle', 'startDate', 'endDate'])

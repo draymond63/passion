@@ -16,11 +16,7 @@ def hierachical_cluster(data, threshold=1):
     return cl.fit_predict(data)
 
 # * Converts a list of key words into a searchable job
-def keys_to_title(keys, group, exclude=None):
-    # Ignore option for the misc category
-    if keys == exclude:
-        return keys
-
+def keys_to_title(keys, group):
     # Find a job that contains all the keys
     for job in group['posTitle']:
         good_job = True
@@ -42,7 +38,7 @@ def keys_to_title(keys, group, exclude=None):
 
 
 # * Using clustering to append the cleaned dump with job key
-def append_dump(dump_file='dump_cleaned.csv', tfidf_file='tfidf/tfidf_positions.csv', cluster_threshold=1):
+def append_jobkeys(dump_file='dump_cleaned.csv', tfidf_file='tfidf/tfidf_positions.csv', cluster_threshold=1):
     # Grab the data
     df = pd.read_csv(tfidf_file)
     vecs = df.drop('posTitle', axis=1)
@@ -63,7 +59,6 @@ def append_dump(dump_file='dump_cleaned.csv', tfidf_file='tfidf/tfidf_positions.
         word_freqs = group.drop(['posTitle', 'groupNum'], axis=1)
         word_freqs = word_freqs.mean()
         # Get the mose popular words from the group
-        # ! USE TERM PERCENTAGE RATHER THAN TOP 2?
         keys = word_freqs.nlargest(2, keep='all')
         # We actually want the indices since that is where the words are
         keys = list(keys.index)
@@ -77,7 +72,8 @@ def append_dump(dump_file='dump_cleaned.csv', tfidf_file='tfidf/tfidf_positions.
             misc_groups.append(groupNum)
 
         # Convert list to job title (string)
-        keys = keys_to_title(keys, group, exclude='misc')
+        if keys != 'misc':
+            keys = keys_to_title(keys, group)
 
         # Save the keys in a nice dict
         jobKeys[groupNum] = keys
@@ -115,4 +111,4 @@ def append_dump(dump_file='dump_cleaned.csv', tfidf_file='tfidf/tfidf_positions.
 
 
 if __name__ == "__main__":
-    append_dump()
+    append_jobkeys()
