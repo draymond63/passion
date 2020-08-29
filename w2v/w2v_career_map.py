@@ -62,7 +62,7 @@ def display_map(og_file='w2v/pos_w2v_matrix.json', title_options='', dump_file='
     dump = pd.read_csv(dump_file)
     w2v_visual = pd.DataFrame(w2v_visual, columns=['x', 'y'])
     # Reattach the titles
-    df = w2v_visual.join(data['posTitle'])
+    df = w2v_visual.join(titles)
     # Attach the w2v groups
     df = pd.merge(dump, df, on='posTitle')
     df = df.filter(['posTitle', 'x', 'y', 'w2vKeyNum'])
