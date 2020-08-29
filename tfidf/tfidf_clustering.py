@@ -61,6 +61,7 @@ def append_dump(dump_file='dump_cleaned.csv', tfidf_file='tfidf/tfidf_positions.
         word_freqs = group.drop(['posTitle', 'groupNum'], axis=1)
         word_freqs = word_freqs.mean()
         # Get the mose popular words from the group
+        # ! USE TERM PERCENTAGE RATHER THAN TOP 2?
         keys = word_freqs.nlargest(2, keep='all')
         # We actually want the indices since that is where the words are
         keys = list(keys.index)

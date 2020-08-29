@@ -47,18 +47,52 @@ def tree_stats(graph, level, save_data=False):
         'avg': round(avg, 4)
     }
 
-graph = CareerPath('./path/career_path_graph_keys.json')
+def title_availability_stats(graph):
+    # ! Computer Systems Analyst --> system analyst
+    # ! Auditing clerk --> law clerk
+    # ! Nurse --> Registered Nurse
+    top_jobs = [
+        'Truck Driver', 'Registered Nurse', 'Retail Worker', 'Retail Salesperson', 
+        'Software Developer', 'Customer Service Representative', 
+        'Marketing Manager', 'Computer User Support Specialist', 'Computer Systems Analyst', 
+        'Systems Administrator', 'Web Developer', 'Management Analyst', 
+        'Medical and Health Services Manager', 'Accountant', 'Project Manager', 
+        'Sales Manager', 'Industrial Engineer', 'Executive Secretary', 
+        'Sales Representative', 'Maintenance Worker', 'Social Assistant', 
+        'Nursing Assistant', 'Vocational Nurse', 'Operations Manager', 
+        'Auditing Clerk', 'Financial Manager', 'Insurance Sales Agent', 
+        'Critical Care Nurse', 'Cashier', 'Computer Systems Engineer', 
+        'Marketing Specialist', 'Physical Therapist', 'Medical Assistant', 
+        'Quality Assurance', 'Information Security Analyst', 'Medical Secretary', 
+        'Security Guard', 'Family Practitioner'
+    ]
+    available = 0
+    unavailable = []
+
+    for job in top_jobs:
+        if graph.find_title(job):
+            available +=1
+        else:
+            unavailable.append(job)
+
+    percentage = round(available/len(top_jobs)*100, 2)
+    print(percentage, '% of top 50 jobs available')
+    print('Unavailable Jobs')
+    print(unavailable)
+
+graph = CareerPath('path/career_path_graph_keys.json')
+title_availability_stats(graph)
 # print(tree_stats(graph, 1))
 # print(tree_stats(graph, 2))
 # print(tree_stats(graph, 3))
 # print(tree_stats(graph, 4))
 
-job = 'nurse'
-tree = graph.get_path(job, 1)
-print_tree(tree)
-tree = graph.get_path(job, 2)
-print_tree(tree)
-tree = graph.get_path(job, 3)
-print_tree(tree)
-tree = graph.get_path(job, 4)
-print_tree(tree)
+# job = 'Nurse'
+# tree = graph.get_path(job, 1)
+# print_tree(tree)
+# tree = graph.get_path(job, 2)
+# print_tree(tree)
+# tree = graph.get_path(job, 3)
+# print_tree(tree)
+# tree = graph.get_path(job, 4)
+# print_tree(tree)

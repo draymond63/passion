@@ -6,8 +6,8 @@ def compile_prereq_graph(og_file='dump_cleaned.csv', new_file='path/career_path_
     df = pd.read_csv(og_file)
 
     if use_keys:
-        assert 'jobKeys' in df, f'{og_file} does not contain job keys, please run tfidf_clustering.py'
-        title_key = 'jobKeys'
+        assert 'jobKey' in df, f'{og_file} does not contain job keys, please run tfidf_clustering.py'
+        title_key = 'jobKey'
     else:
         title_key = 'posTitle'
 
