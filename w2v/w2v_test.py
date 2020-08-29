@@ -18,13 +18,13 @@ if __name__ == '__main__':
     # Create the word2vec map
     w2v = pd.read_json('./w2v/pos_w2v_matrix.json')
     cMap = CareerMap(w2v, jobColumn='posTitle')
-    # Keep track of how well we do
-    score = 0
-    # Test each analogy
-    for l in analogies:
-        score += testAnalogy(cMap, *l)
+    # # Keep track of how well we do
+    # score = 0
+    # # Test each analogy
+    # for l in analogies:
+    #     score += testAnalogy(cMap, *l)
 
-    print('Score:', score*100/len(analogies), '%')
+    # print('Score:', score*100/len(analogies), '%')
 
     print(cMap.cosSim('Tactical Pricing Analyst', 'Senior Engineer'))
 

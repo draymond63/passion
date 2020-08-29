@@ -9,8 +9,8 @@ from w2v.w2v_train_compile import compile_w2v_data
 
 
 CREATE_DATA = True
-CREATE_PATH_GRAPH = False
-CREATE_W2V_MAP = False
+CREATE_PATH_GRAPH = True
+CREATE_W2V_MAP = True
 
 if __name__ == "__main__":
     # * Clean the data and assign key tags to each job (based off term frequency)
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     if CREATE_PATH_GRAPH:
         compile_prereq_graph()
 
-    # ! Convert jupyter notebooks to py files so they can be imported
+    # * Creates an N-D map of the careers based on who had the same job
     if CREATE_W2V_MAP:
         compile_w2v_data()
 

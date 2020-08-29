@@ -50,12 +50,14 @@ def append_dump(dump_file='dump_cleaned.csv', tfidf_file='tfidf/tfidf_positions.
     groups = hierachical_cluster(vecs, cluster_threshold)
     groups = pd.Series(groups, name='groupNum')
 
+    print('\nDATA WITH CLUSTERED GROUPINGS')
     print('Clustering grouped', len(groups), 'jobs into', groups.nunique(), 'groups')
 
     categories = pd.concat([df, groups], axis=1)
     categories_grouped = categories.groupby('groupNum')
     
-    jobKeys = {}
+    misc_groups = []
+    jobKeys = [0] * len(categories_grouped)
     for groupNum, group in categories_grouped:
         # Average together the tfidf columns to find the most common words
         word_freqs = group.drop(['posTitle', 'groupNum'], axis=1)
@@ -72,12 +74,28 @@ def append_dump(dump_file='dump_cleaned.csv', tfidf_file='tfidf/tfidf_positions.
         # If the keys are still too long, it doesn't belong to any category
         if len(keys) > 2:
             keys = 'misc'
+            misc_groups.append(groupNum)
 
         # Convert list to job title (string)
         keys = keys_to_title(keys, group, exclude='misc')
 
         # Save the keys in a nice dict
         jobKeys[groupNum] = keys
+
+    # * Merge all the misc groups into one
+    # Iterate through all useless misc groups, putting the largest groupNums in their place
+    for groupNum in misc_groups[1:]:
+        # Replace the numbers in the df with the misc group we are keeping
+        categories['groupNum'] = categories['groupNum'].apply(
+            lambda num: misc_groups[0] if num == groupNum else num)
+        # Replace the numbers in the df to switch over the new group
+        categories['groupNum'] = categories['groupNum'].apply(
+            lambda num: groupNum if num == len(jobKeys)-1 else num)
+
+        # Reassign the group number for when the keys are added
+        jobKeys[groupNum] = jobKeys[-1]
+        # Pop off the last group since it has been reassigned
+        del jobKeys[-1]
 
     # * Merging into the dump_cleaned
     dump = pd.read_csv(dump_file)
@@ -93,7 +111,6 @@ def append_dump(dump_file='dump_cleaned.csv', tfidf_file='tfidf/tfidf_positions.
         # Wewrite the dump to include the group number and job keys
         dump.to_csv('dump_cleaned.csv', index=False)
     
-    print('\nDATA WITH CLUSTERED GROUPINGS')
     print(dump.head())
 
 
