@@ -32,7 +32,8 @@ def tfidf_vecs(og_file='dump_cleaned.csv', new_file='tfidf_positions.csv'):
     df = pd.concat([pos, vecs], axis=1)
     # Rename the columns so each tfidf coordinate corresponds to a word
     df.columns = ['posTitle', *vocab]
-    print(df.head(3))
+    print('\nTFIDF VECTORS')
+    print(df.head())
     print(df.shape)
 
     if new_file:

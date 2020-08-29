@@ -53,7 +53,7 @@ class CareerPath():
         node_counter = 0
 
         while len(queue):
-            # Grab the dict of prereqs and srink it to satisfy constraints
+            # Grab the dict of prereqs and shrink it to satisfy constraints
             job_reqs = self._restrict_jobs(self.data[queue[0]], tree, min_edge_weight, node_child_limit)
 
             # Add job_reqs as children to the tree
@@ -75,11 +75,10 @@ class CareerPath():
         return tree
 
     def get_path_capped(self, title, soft_max=10, hard_max=20, hard_min=3, max_child=3):
-        title = title.lower()
-        min_edge = 0
-
+        # Make an minimally restrained tree
+        min_edge = 1
         tree = self._get_path(title, min_edge, node_child_limit=max_child)
-
+        # Keep creating trees with stricter requirements until it drops below the soft_max
         while len(tree) > soft_max:
             min_edge += 1
             tree = self._get_path(title, min_edge, hard_max, max_child)
@@ -90,21 +89,14 @@ class CareerPath():
         
         return tree
 
-    def get_path_small(self, title):
-        return self.get_path_capped(title, 3, 5)
-    def get_path_medium(self, title):
-        return self.get_path_capped(title, 5, 10)
-    def get_path_big(self, title):
-        return self.get_path_capped(title, 10, 20)
-
     def get_path(self, title, size=1):
         assert size in [1, 2, 3, 4], f'Size request must be 1-4, not {size}'
 
         if size == 1:
-            return self.get_path_small(title)
+            return self.get_path_capped(title, 3, 5)
         if size == 2:
-            return self.get_path_medium(title)
+            return self.get_path_capped(title, 5, 10)
         if size == 3:
-            return self.get_path_big(title)
-        else:
-            return self._get_path(title, min_edge_weight=2)
+            return self.get_path_capped(title, 10, 20)
+        
+        return self._get_path(title, min_edge_weight=2)

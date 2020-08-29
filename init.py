@@ -8,8 +8,8 @@ from path.career_path_compile import compile_prereq_graph
 
 
 CREATE_DATA = True
-CREATE_PATH_GRAPH = True
-CREATE_W2V_MAP = True
+CREATE_PATH_GRAPH = False
+CREATE_W2V_MAP = False
 
 if __name__ == "__main__":
     # * Clean the data and assign key tags to each job (based off term frequency)

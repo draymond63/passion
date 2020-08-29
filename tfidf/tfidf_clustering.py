@@ -3,9 +3,7 @@
 # https://scikit-learn.org/stable/modules/clustering.html
 
 import pandas as pd
-from sklearn.cluster import AgglomerativeClustering, KMeans 
-import matplotlib.pyplot as plt
-from tqdm import tqdm
+from sklearn.cluster import AgglomerativeClustering
 
 # * Clustering algorithm
 def hierachical_cluster(data, threshold=1):
@@ -17,38 +15,42 @@ def hierachical_cluster(data, threshold=1):
     )
     return cl.fit_predict(data)
 
-# * Graphing KMeans clustering as a function of n_clusters
-def graph_kmeans(data, min_k, max_k, jump=1):
-    # Iterate through each possible number of clusters
-    distortions = []
-    for i in tqdm(range(min_k, max_k, jump)):
-        km = KMeans(
-            n_clusters=i, init='random',
-            n_init=10, max_iter=300,
-            tol=1e-04, random_state=0
-        )
-        km.fit_predict(data)
-        distortions.append(km.inertia_)
+# * Converts a list of key words into a searchable job
+def keys_to_title(keys, group, exclude=None):
+    # Ignore option for the misc category
+    if keys == exclude:
+        return keys
 
-    # Save the results in case things go south
-    pd.Series(distortions).to_csv('tfidf/inertia.tmp.csv')
-    # Plot the results
-    plt.plot(range(min_k, max_k, jump), distortions, marker='o')
-    plt.xlabel('Number of clusters')
-    plt.ylabel('Distortion')
-    plt.show()
+    # Find a job that contains all the keys
+    for job in group['posTitle']:
+        good_job = True
+        
+        for key in keys:
+            if key not in job:
+                good_job = False
+        
+        # If the job contains all the keys, find the order and return them
+        if good_job:
+            # Grab starting index of each word
+            placement = {key: job.find(key) for key in keys}
+            # Sort words into a list by their index
+            words = sorted(placement, key=placement.get)
+            # Join all the words with spaces
+            return ' '.join(words)
+
+    raise AssertionError(f'No job contained all the keys in the group {keys}, suggesting a bad grouping')
+
 
 # * Using clustering to append the cleaned dump with job key
-def append_dump(dump_file='dump_cleaned.csv', tfidf_file='tfidf/tfidf_positions.csv'):
+def append_dump(dump_file='dump_cleaned.csv', tfidf_file='tfidf/tfidf_positions.csv', cluster_threshold=1):
     # Grab the data
     df = pd.read_csv(tfidf_file)
     vecs = df.drop('posTitle', axis=1)
     # Result in is an np.ndarray of numerical categories
-    groups = hierachical_cluster(vecs)
+    groups = hierachical_cluster(vecs, cluster_threshold)
     groups = pd.Series(groups, name='groupNum')
 
-    print(len(groups))
-    print(groups.nunique())
+    print('Clustering grouped', len(groups), 'jobs into', groups.nunique(), 'groups')
 
     categories = pd.concat([df, groups], axis=1)
     categories_grouped = categories.groupby('groupNum')
@@ -68,7 +70,11 @@ def append_dump(dump_file='dump_cleaned.csv', tfidf_file='tfidf/tfidf_positions.
             keys = list(keys.index)
         # If the keys are still too long, it doesn't belong to any category
         if len(keys) > 2:
-            keys = ['misc']
+            keys = 'misc'
+
+        # Convert list to job title (string)
+        keys = keys_to_title(keys, group, exclude='misc')
+
         # Save the keys in a nice dict
         jobKeys[groupNum] = keys
 
@@ -79,14 +85,16 @@ def append_dump(dump_file='dump_cleaned.csv', tfidf_file='tfidf/tfidf_positions.
         # Merge the group numbers on the posTitles first
         dump = pd.merge(dump, categories.filter(['posTitle', 'groupNum']), on='posTitle')
         # Merge the job keys on the newly joined group numbers
-        jobKeys = pd.Series(jobKeys, name='jobKeys')
+        jobKeys = pd.Series(jobKeys, name='jobKey')
         dump = pd.merge(dump, jobKeys, left_on='groupNum', right_index=True)
         # Sort the rows to bring it back to where it was before
         dump = dump.sort_values(['memberUrn', 'startDate'], ascending=False)
         # Wewrite the dump to include the group number and job keys
         dump.to_csv('dump_cleaned.csv', index=False)
     
-    print(dump.head(10))
+    print('\nDATA WITH CLUSTERED GROUPINGS')
+    print(dump.head())
+
 
 if __name__ == "__main__":
     append_dump()

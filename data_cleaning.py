@@ -17,6 +17,7 @@ def clean_data(og_file='dump.csv', new_file='dump_cleaned.csv'):
 
 
     # * Remove acronyms
+    # ! DOESNT WORK ON SUBSTRINGS
     df['posTitle'] = df['posTitle'].replace(
         ['cio', 'ceo', 'cfo', 'coo', 'cmo', 'cto', 'co-founder', '-', 'bi', 'dba', 'qa', 'pmo', 'pr', 'hr', 'sr', 'vp'],
         ['chief information officer',
@@ -57,6 +58,7 @@ def clean_data(og_file='dump.csv', new_file='dump_cleaned.csv'):
     df = df.reset_index().drop('index', axis=1)
     # Save data
     df.to_csv('dump_cleaned.csv', index=False)
+    print('\nCLEANED DATA')
     print(df.head())
     print(df.shape)
 
