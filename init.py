@@ -5,6 +5,7 @@ from data_cleaning import clean_data
 
 from tfidf import tfidf_cluster
 from tfidf.tfidf_vectorizer import tfidf_vecs
+from tfidf.manual_clean import clean_tfidf_keys
 
 from path.career_path_compile import compile_prereq_graph
 from map.career_map_compile import create_career_map, display_map
@@ -21,6 +22,7 @@ if __name__ == "__main__":
         tfidf_vecs()                # min_doc_freq = 0.001
         # Defaults to appending tfidf keys
         tfidf_cluster.append_keys() # cluster_threshold = 1
+        clean_tfidf_keys()
 
     # * Use this graph in the path_test & path_use files
     if CREATE_PATH_GRAPH:
