@@ -58,7 +58,7 @@ def create_career_map(og_file='dump_cleaned.csv', new_file='career_map.csv', tit
     # Remove useless rows and columns
     # Row dropping only focuses on columns named 0..~540 (everything but title_col)
     cmap.dropna(how='all', axis=1, inplace=True)    
-    cmap.dropna(how='all', subset=[*range(len(cmap))], inplace=True) # ! THIS IS BROKEN
+    cmap.dropna(how='all', subset=[*range(len(cmap))], inplace=True)
     print(cmap.head())
     print(cmap.shape)
 
