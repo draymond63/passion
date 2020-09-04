@@ -85,7 +85,7 @@ def create_career_map(og_file='dump_cleaned.csv', new_file='map/career_map.csv',
         cmap.to_csv(new_file)
     return cmap
 
-def display_map(cmap: pd.DataFrame, num_col='cmapKey', name_col='tfidfKey'):
+def display_map(cmap: pd.DataFrame, num_col='cmapKey', name_col='tfidfKey', html_file=None):
     # Read in the data if a filename is given
     if isinstance(cmap, str):
         cmap = pd.read_csv(cmap)
@@ -112,7 +112,9 @@ def display_map(cmap: pd.DataFrame, num_col='cmapKey', name_col='tfidfKey'):
         hover_name=name_col
     )
     fig.show()
+    if html_file:
+        fig.write_html(html_file)
 
 if __name__ == "__main__":
     cmap = create_career_map()
-    display_map(cmap)
+    display_map(cmap, html_file='map/2DCareerPlot.html')
