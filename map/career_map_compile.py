@@ -24,7 +24,7 @@ def pmi_matrix(df: pd.DataFrame, positive=False):
         df[df < 0] = 0.0
     return df
 
-def create_career_map(og_file='dump_cleaned.csv', new_file='career_map.csv', title_col='tfidfKey', new_col='cmapKey', space_dim=None, do_cluster=True):
+def create_career_map(og_file='dump_cleaned.csv', new_file='map/career_map.csv', title_col='tfidfKey', new_col='cmapKey', space_dim=None, cluster_threshold=None):
     df = pd.read_csv(og_file)
 
     # * Creating a huge matrix where each row is a job and each column is a coordinate
@@ -46,26 +46,15 @@ def create_career_map(og_file='dump_cleaned.csv', new_file='career_map.csv', tit
                     coords = (job_keys[job1], job_keys[job2])
                     co_occerrence[coords] += 1
 
-    # Reorganize data
     co_occerrence = pd.DataFrame(co_occerrence)
-    job_array = pd.Series(job_array, name=title_col)
-
+    # Use PMI normalize the data
     cmap = pmi_matrix(co_occerrence)
-    # Join the title keys
-    cmap = cmap.join(job_array)
-    print(cmap.head())
-    print(cmap.shape)
     # Remove useless rows and columns
-    # Row dropping only focuses on columns named 0..~540 (everything but title_col)
+    cmap.dropna(how='all', axis=0, inplace=True)
     cmap.dropna(how='all', axis=1, inplace=True)    
-    cmap.dropna(how='all', subset=[*range(len(cmap))], inplace=True)
-    print(cmap.head())
-    print(cmap.shape)
-
-    if do_cluster:
-        categories = cluster(vecs=cmap.drop(title_col, axis=1), title_column=df[title_col], new_col=new_col, cluster_threshold=25)
-        cmap = pd.merge(cmap, categories, on=title_col)
-        # print(cmap.head())
+    # Join the title keys
+    job_array = pd.Series(job_array, name=title_col)
+    cmap = cmap.join(job_array)
 
     # Collapse matrix if requested
     if space_dim:
@@ -74,7 +63,14 @@ def create_career_map(og_file='dump_cleaned.csv', new_file='career_map.csv', tit
         collapsed = pca.fit_transform(cmap.drop(title_col, axis=1))
         # Use the new data as the columns
         collapsed = pd.DataFrame(collapsed)
-        cmap = pd.merge(cmap[title_col], collapsed)
+        cmap = collapsed.join(cmap[title_col])
+
+    # Add groupings if requested
+    if cluster_threshold != None:
+        categories = cluster(vecs=cmap.drop(title_col, axis=1), title_column=cmap[title_col], new_col=new_col, cluster_threshold=cluster_threshold)
+        cmap = pd.merge(cmap, categories, how='left', on=title_col)
+
+    cmap.dropna(inplace=True)
 
     print(f"\nPMI'd {'& Collapsed ' if space_dim else ''}Co-occurence Career Map")
     print(cmap.shape)
@@ -82,20 +78,26 @@ def create_career_map(og_file='dump_cleaned.csv', new_file='career_map.csv', tit
 
     # Save the data if requested
     if new_file:
-        cmap.to_csv(new_file)
+        cmap.sort_values('cmapKey').to_csv(new_file)
     return cmap
 
 def display_map(cmap, groupNumCol='cmapKey', groupNameCol='tfidfKey'):
-    non_data_cols = [groupNumCol, groupNameCol]
-    data = cmap.drop(non_data_cols, axis=1)
+    # Read in the data if a filename is given
+    if isinstance(cmap, str):
+        cmap = pd.read_csv(cmap)
 
     # Reducing dimensions
     if len(cmap.columns) != 2:
-        tsne = TSNE(n_components=2, random_state=0, verbose=1)
+        # Slice data to be TSNE'd
+        non_data_cols = [groupNumCol, groupNameCol]
+        data = cmap.drop(non_data_cols, axis=1)
+        # Calculate new points
+        tsne = TSNE(n_components=2, random_state=0)
         vecs = tsne.fit_transform(data)
+        # Replace n-dimensional data with the 2D data
         data = pd.DataFrame(vecs)
-
-    cmap = data.join(cmap.filter(non_data_cols))
+        cmap = data.join(cmap.filter(non_data_cols))
+    
     print(cmap.head())
 
     fig = px.scatter(cmap, 
@@ -106,6 +108,5 @@ def display_map(cmap, groupNumCol='cmapKey', groupNameCol='tfidfKey'):
     fig.show()
 
 if __name__ == "__main__":
-    cmap = create_career_map()
-    print(cmap.shape)
-    # display_map(cmap)
+    cmap = create_career_map(space_dim=20, cluster_threshold=20)
+    display_map(cmap)

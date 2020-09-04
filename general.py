@@ -35,13 +35,14 @@ def keys_to_str(keys: list, jobs: (list, pd.Series)):
     raise AssertionError(f'No job contained all the keys in the group {keys}, suggesting a bad grouping')
 
 # * Matches the title column with a group numbering and a list of keys that relate to each group number
-def cluster(vecs: pd.DataFrame, title_column: pd.Series, new_col: str, cluster_threshold=1) -> pd.DataFrame:
+def cluster(vecs: pd.DataFrame, new_col: str, title_column=None, cluster_threshold=1) -> pd.DataFrame:
     # Result in is an np.ndarray of numerical categories
     groups = hierachical_cluster(vecs, cluster_threshold)
     groups = pd.Series(groups, name=new_col)
 
     print('Clustering grouped', len(groups), 'jobs into', groups.nunique(), 'groups')
+    if isinstance(title_column, pd.Series):
+        assert len(groups) == len(title_column), f'vecs must be the same length as the title column, not {len(vecs)}, {len(title_column)}'
+        groups = pd.concat([title_column, groups], axis=1)
 
-    categories = pd.concat([title_column, groups], axis=1)
-
-    return categories
+    return groups

@@ -56,7 +56,7 @@ def append_keys(appended_file='dump_cleaned.csv', input_file='tfidf/tfidf_positi
 
     # Add groups to the data
     new_col_num = new_col+'Num'
-    categories = cluster(data, titles, new_col_num, cluster_threshold=cluster_threshold)
+    categories = cluster(data, new_col_num, titles, cluster_threshold=cluster_threshold)
     new_df = pd.merge(df, categories, on='posTitle')
     grouped_df = new_df.groupby(new_col_num)
     

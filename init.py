@@ -2,13 +2,17 @@
 # kaggle datasets download -f dump.csv --unzip killbot/linkedin-profiles-and-jobs-data
 
 from data_cleaning import clean_data
-from tfidf import tfidf_cluster
 
+from tfidf import tfidf_cluster
 from tfidf.tfidf_vectorizer import tfidf_vecs
+
 from path.career_path_compile import compile_prereq_graph
+from map.career_map_compile import create_career_map, display_map
 
 CREATE_DATA = True
 CREATE_PATH_GRAPH = True
+CREATE_CMAP = True
+DISPLAY_CMAP = True
 
 if __name__ == "__main__":
     # * Clean the data and assign key tags to each job (based off term frequency)
@@ -23,6 +27,9 @@ if __name__ == "__main__":
         compile_prereq_graph()
 
     # * Creates an N-D map of the careers based on who had what jobs
-              
+    if CREATE_CMAP:
+        cmap = create_career_map()
+    if DISPLAY_CMAP:
+        display_map(cmap)
 
 
