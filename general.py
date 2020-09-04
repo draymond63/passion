@@ -15,7 +15,7 @@ def hierachical_cluster(data, threshold=1):
     return cl.fit_predict(data)
 
 # Converts a list of key words into a searchable job
-def keys_to_str(keys: list, jobs: (list, pd.Series)):
+def keys_to_str(keys: list, jobs: (list, pd.Series)) -> str:
     # Find a job that contains all the keys
     for job in jobs:
         good_job = True
@@ -41,8 +41,13 @@ def cluster(vecs: pd.DataFrame, new_col: str, title_column=None, cluster_thresho
     groups = pd.Series(groups, name=new_col)
 
     print('Clustering grouped', len(groups), 'jobs into', groups.nunique(), 'groups')
+    # Merge the title column so that it has something to merge with
     if isinstance(title_column, pd.Series):
         assert len(groups) == len(title_column), f'vecs must be the same length as the title column, not {len(vecs)}, {len(title_column)}'
-        groups = pd.concat([title_column, groups], axis=1)
+        # Reset the index to make sure concatentation works as intended
+        title_column.reset_index(inplace=True, drop=True)
+        groups = pd.concat([groups, title_column], axis=1)
+    else:
+        groups = pd.DataFrame(groups)
 
     return groups

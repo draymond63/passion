@@ -48,6 +48,7 @@ def combine_misc(df, numCol: str, titleCol: str):
     return df
 
 # * Using clustering to append the cleaned dump with job key
+# ! SOMETHING IS WRONG WITH APPENDING
 def append_keys(appended_file='dump_cleaned.csv', input_file='tfidf/tfidf_positions.csv', new_col='tfidfKey', cluster_threshold=1):
     print('\nDATA WITH TFIDF CLUSTERED GROUPINGS')
     df = pd.read_csv(input_file)

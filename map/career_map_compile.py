@@ -8,7 +8,7 @@ from Passion.general import cluster
 
 # (Positive) Pointwise mutual information --> log(p(a,b) / ( p(a) * p(b) ))
 # * Standardizes the data in the matrix so that prevalence of a job doesn't affect things
-def pmi_matrix(df: pd.DataFrame, positive=False):
+def pmi_matrix(df: pd.DataFrame, positive=False) -> pd.DataFrame:
     # Convert matrix into probablities
     col_totals = df.sum(axis=0)
     total = col_totals.sum()
@@ -24,7 +24,8 @@ def pmi_matrix(df: pd.DataFrame, positive=False):
         df[df < 0] = 0.0
     return df
 
-def create_career_map(og_file='dump_cleaned.csv', new_file='map/career_map.csv', title_col='tfidfKey', new_col='cmapKey', space_dim=None, cluster_threshold=None):
+def create_career_map(og_file='dump_cleaned.csv', new_file='map/career_map.csv', title_col='tfidfKey', new_col='cmapKey', space_dim=25, cluster_threshold=20) -> pd.DataFrame:
+    print(f"\nPMI'd {'& Collapsed ' if space_dim else ''}Co-occurence Career Map")
     df = pd.read_csv(og_file)
 
     # * Creating a huge matrix where each row is a job and each column is a coordinate
@@ -51,10 +52,13 @@ def create_career_map(og_file='dump_cleaned.csv', new_file='map/career_map.csv',
     cmap = pmi_matrix(co_occerrence)
     # Remove useless rows and columns
     cmap.dropna(how='all', axis=0, inplace=True)
-    cmap.dropna(how='all', axis=1, inplace=True)    
+    cmap.dropna(how='all', axis=1, inplace=True)
+
     # Join the title keys
     job_array = pd.Series(job_array, name=title_col)
-    cmap = cmap.join(job_array)
+    # Drop the index before the merge because the indexing has changed
+    cmap.reset_index(inplace=True, drop=True)
+    cmap = pd.merge(cmap, job_array, left_index=True, right_index=True)
 
     # Collapse matrix if requested
     if space_dim:
@@ -63,50 +67,55 @@ def create_career_map(og_file='dump_cleaned.csv', new_file='map/career_map.csv',
         collapsed = pca.fit_transform(cmap.drop(title_col, axis=1))
         # Use the new data as the columns
         collapsed = pd.DataFrame(collapsed)
-        cmap = collapsed.join(cmap[title_col])
+        cmap = pd.merge(cmap[title_col], collapsed, left_index=True, right_index=True)
+
 
     # Add groupings if requested
     if cluster_threshold != None:
+        assert new_col and title_col, f'A column name must be given to new_col for clustering to work'
         categories = cluster(vecs=cmap.drop(title_col, axis=1), title_column=cmap[title_col], new_col=new_col, cluster_threshold=cluster_threshold)
         cmap = pd.merge(cmap, categories, how='left', on=title_col)
 
-    cmap.dropna(inplace=True)
+    # Reset the index cuz it's gonna be weird
+    cmap.reset_index(inplace=True, drop=True)
 
-    print(f"\nPMI'd {'& Collapsed ' if space_dim else ''}Co-occurence Career Map")
-    print(cmap.shape)
+    # * print(np.where(pd.isnull(cmap)))
     print(cmap.head())
-
+    print(cmap.shape)
+    
     # Save the data if requested
     if new_file:
-        cmap.sort_values('cmapKey').to_csv(new_file)
+        cmap.to_csv(new_file)
     return cmap
 
-def display_map(cmap, groupNumCol='cmapKey', groupNameCol='tfidfKey'):
+def display_map(cmap: pd.DataFrame, numCol='cmapKey', nameCol='tfidfKey'):
     # Read in the data if a filename is given
     if isinstance(cmap, str):
         cmap = pd.read_csv(cmap)
 
+    # Slice data to be TSNE'd
+    non_data_cols = [numCol, nameCol]
+    data = cmap.drop(non_data_cols, axis=1)
+
     # Reducing dimensions
-    if len(cmap.columns) != 2:
-        # Slice data to be TSNE'd
-        non_data_cols = [groupNumCol, groupNameCol]
-        data = cmap.drop(non_data_cols, axis=1)
+    if len(data.columns) != 2:
         # Calculate new points
         tsne = TSNE(n_components=2, random_state=0)
         vecs = tsne.fit_transform(data)
         # Replace n-dimensional data with the 2D data
         data = pd.DataFrame(vecs)
-        cmap = data.join(cmap.filter(non_data_cols))
-    
+        cmap = cmap.filter(non_data_cols)
+        cmap = pd.merge(cmap, data, left_index=True, right_index=True)
+
     print(cmap.head())
 
     fig = px.scatter(cmap, 
         x=0, y=1,
-        color=groupNumCol,
-        hover_name=groupNameCol
+        color=numCol,
+        hover_name=nameCol
     )
     fig.show()
 
 if __name__ == "__main__":
-    cmap = create_career_map(space_dim=20, cluster_threshold=20)
+    cmap = create_career_map()
     display_map(cmap)
