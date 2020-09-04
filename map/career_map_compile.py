@@ -69,7 +69,6 @@ def create_career_map(og_file='dump_cleaned.csv', new_file='map/career_map.csv',
         collapsed = pd.DataFrame(collapsed)
         cmap = pd.merge(cmap[title_col], collapsed, left_index=True, right_index=True)
 
-
     # Add groupings if requested
     if cluster_threshold != None:
         assert new_col and title_col, f'A column name must be given to new_col for clustering to work'
@@ -80,21 +79,19 @@ def create_career_map(og_file='dump_cleaned.csv', new_file='map/career_map.csv',
     cmap.reset_index(inplace=True, drop=True)
 
     # * print(np.where(pd.isnull(cmap)))
-    print(cmap.head())
-    print(cmap.shape)
     
     # Save the data if requested
     if new_file:
         cmap.to_csv(new_file)
     return cmap
 
-def display_map(cmap: pd.DataFrame, numCol='cmapKey', nameCol='tfidfKey'):
+def display_map(cmap: pd.DataFrame, num_col='cmapKey', name_col='tfidfKey'):
     # Read in the data if a filename is given
     if isinstance(cmap, str):
         cmap = pd.read_csv(cmap)
 
     # Slice data to be TSNE'd
-    non_data_cols = [numCol, nameCol]
+    non_data_cols = [num_col, name_col]
     data = cmap.drop(non_data_cols, axis=1)
 
     # Reducing dimensions
@@ -111,8 +108,8 @@ def display_map(cmap: pd.DataFrame, numCol='cmapKey', nameCol='tfidfKey'):
 
     fig = px.scatter(cmap, 
         x=0, y=1,
-        color=numCol,
-        hover_name=nameCol
+        color=num_col,
+        hover_name=name_col
     )
     fig.show()
 
