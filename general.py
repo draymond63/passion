@@ -14,34 +14,8 @@ def hierachical_cluster(data, threshold=1):
     )
     return cl.fit_predict(data)
 
-
-# * Names the groups based off of the titles
-def name_group(grouped_freqs: pd.DataFrame, grouped_titles: pd.Series) -> str:
-    assert len(grouped_freqs) == len(grouped_titles), f'Frequencies and titles must have the same number of rows, freqs: {len(grouped_freqs)}, titles: {len(grouped_titles)}'
-
-    # Average together the tfidf columns to find the most common words
-    word_freqs = grouped_freqs.mean()
-    # Get the mose popular words from the group
-    keys = word_freqs.nlargest(2, keep='all')
-    # We actually want the indices since that is where the words are
-    keys = list(keys.index)
-
-    # Since we are using all, if a word has way too many keys, that means it was only meant to have 1
-    if len(keys) > 3: 
-        keys = word_freqs.nlargest(1, keep='all')
-        keys = list(keys.index)
-    # If the keys are still too long, it doesn't belong to any category
-    if len(keys) > 2:
-        keys = 'misc'
-    # Convert list to job title (string)
-    else:
-        keys = keys_to_str(keys, grouped_titles)
-    
-    # Append the job_keys
-    return keys
-
 # * Converts a list of key words into a searchable job
-def keys_to_str(keys: list, jobs: (list, pd.Series)) -> str:
+def keys_to_str(keys: list, jobs: (list, pd.Series), use_full_title=True) -> str:
     # Find a job that contains all the keys
     for job in jobs:
         good_job = True
@@ -52,13 +26,38 @@ def keys_to_str(keys: list, jobs: (list, pd.Series)) -> str:
         
         # If the job contains all the keys, find the order and return them
         if good_job:
-            # Grab starting index of each word
-            placement = {key: job.find(key) for key in keys}
-            # Sort words into a list by their index
-            words = sorted(placement, key=placement.get)
-            # Join all the words with spaces
-            return ' '.join(words)
+            # Use only the keys to make the string
+            if not use_full_title:
+                # Grab starting index of each word
+                placement = {key: job.find(key) for key in keys}
+                # Sort words into a list by their index
+                words = sorted(placement, key=placement.get)
+                # Join all the words with spaces
+                return ' '.join(words)
+            # Or use (almost) the full title
+            else:
+                # Find when the first word appears
+                beginning = min([job.find(key) for key in keys])
+                # Remove the unimportant intro words
+                return job[beginning:]
+
     raise AssertionError(f'No job contained all the keys in the group {keys}, suggesting a bad grouping')
+
+def name_group(titles: pd.Series) -> str:
+    # Concatentate all the words
+    total = ' '.join(titles)
+    # Get all the unique words in the series
+    words = set(total.split(' '))
+    # Remove words that are fillers
+    stop_words = set(['in', 'of', '-', '&'])
+    words = words - stop_words
+
+    counts = {}
+    for word in words:
+        counts[word] = total.count(word)
+
+    return max(counts, key=counts.get)
+
 
 # * Combines all groups in the list into one
 def combine_group(df, groups, col: str):
