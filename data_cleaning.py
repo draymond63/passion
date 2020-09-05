@@ -42,9 +42,10 @@ def clean_data(og_file='dump.csv', new_file='dump_cleaned.csv', rep_times=3):
 
     # * Character removal 
     # Remove the end of entries with the following symbols
-    df['posTitle'] = df['posTitle'].apply(lambda x: x.split('(')[0].strip())
-    df['posTitle'] = df['posTitle'].apply(lambda x: x.split(',')[0].strip())
-    df['posTitle'] = df['posTitle'].apply(lambda x: x.split('|')[0].strip())
+    df['posTitle'] = df['posTitle'].apply(lambda x: x.split('(')[0])
+    df['posTitle'] = df['posTitle'].apply(lambda x: x.split(',')[0])
+    df['posTitle'] = df['posTitle'].apply(lambda x: x.split('|')[0])
+    df['posTitle'] = df['posTitle'].apply(lambda x: x.strip())
 
     # ? Remove columns with 'and' or '&' in them?
 

@@ -24,8 +24,32 @@ def pmi_matrix(df: pd.DataFrame, positive=False) -> pd.DataFrame:
         df[df < 0] = 0.0
     return df
 
+def cluster_mapping(cmap, new_col='cmapKey', title_col='tfidfKey', cluster_threshold=20) -> pd.DataFrame:
+     # Add groupings if requested
+    if cluster_threshold != None:
+        assert title_col, f'A column name must be given to num_col for clustering to work'
+        categories = cluster(vecs=cmap.drop(title_col, axis=1), title_column=cmap[title_col], new_col='temp_col', cluster_threshold=cluster_threshold)
+        df = pd.merge(cmap, categories, how='left', on=title_col)
+
+    # Reset the index cuz it's gonna be weird
+    df.reset_index(inplace=True, drop=True)
+
+    # * Name the groups
+    grouped_cmap = df.groupby('temp_col')
+    titles = [0] * len(grouped_cmap)
+    # Assign a name to each group
+    for i, group in grouped_cmap:
+        titles[i] = name_group(group[title_col])
+    # Add the new titles to the dataset
+    titles = pd.Series(titles, name=new_col)
+    categories = pd.merge(categories, titles, left_on='temp_col', right_index=True)
+    categories.drop('temp_col', axis=1, inplace=True)
+    categories.sort_index(inplace=True)
+
+    return categories
+
 # space_dim=25, cluster_threshold=20
-def create_career_map(og_file='dump_cleaned.csv', new_file='map/career_map.csv', title_col='tfidfKey', num_col='cmapKeyNum', name_col='cmapKey', space_dim=50, cluster_threshold=20) -> pd.DataFrame:
+def create_career_map(og_file='dump_cleaned.csv', new_file='map/career_map.csv', title_col='tfidfKey', space_dim=50) -> pd.DataFrame:
     print(f"\nPMI'd {'& Collapsed ' if space_dim else ''}Co-occurence Career Map")
     df = pd.read_csv(og_file)
 
@@ -70,30 +94,11 @@ def create_career_map(og_file='dump_cleaned.csv', new_file='map/career_map.csv',
         collapsed = pd.DataFrame(collapsed)
         cmap = pd.merge(cmap[title_col], collapsed, left_index=True, right_index=True)
 
-    # Add groupings if requested
-    if cluster_threshold != None:
-        assert num_col and title_col, f'A column name must be given to num_col for clustering to work'
-        categories = cluster(vecs=cmap.drop(title_col, axis=1), title_column=cmap[title_col], new_col=num_col, cluster_threshold=cluster_threshold)
-        cmap = pd.merge(cmap, categories, how='left', on=title_col)
-
-    # Reset the index cuz it's gonna be weird
-    cmap.reset_index(inplace=True, drop=True)
-
-    # * Name the groups
-    if name_col:
-        grouped_cmap = cmap.groupby(num_col)
-        titles = [0] * len(grouped_cmap)
-        # Assign a name to each group
-        for i, group in grouped_cmap:
-            titles[i] = name_group(group[title_col])
-        # Add the new titles to the dataset
-        titles = pd.Series(titles, name=name_col)
-        cmap = pd.merge(cmap, titles, left_on=num_col, right_index=True)
-        cmap.sort_index(inplace=True)
-
     # Save the data if requested
     if new_file:
         cmap.to_csv(new_file, index=False)    
+    print(cmap.head())
+
     return cmap
 
 def display_map(cmap: pd.DataFrame, color_col='cmapKey', name_col='tfidfKey', html_file=None):
@@ -132,5 +137,9 @@ def display_map(cmap: pd.DataFrame, color_col='cmapKey', name_col='tfidfKey', ht
         fig.write_html(html_file)
 
 if __name__ == "__main__":
-    cmap = create_career_map()
-    display_map('map/career_map.csv') # , html_file='map/2DCareerPlot.html'
+    cmap = create_career_map(new_file=None)
+    # Add a name to the groups
+    categories = cluster_mapping(cmap, cluster_threshold=30)
+    cmap = pd.merge(cmap, categories, on='tfidfKey')
+    # Display the data!
+    display_map(cmap) # , html_file='map/2DCareerPlot.html'
