@@ -9,9 +9,10 @@ from tfidf.manual_clean import clean_tfidf_keys
 
 from path.career_path_compile import compile_prereq_graph
 from map.career_map_compile import create_career_map, display_map
+from map.career_grouping import group_careers, display_groups
 
-CREATE_DATA = False
-CREATE_PATH_GRAPH = False
+CREATE_DATA = True
+CREATE_PATH_GRAPH = True
 CREATE_CMAP = True
 DISPLAY_CMAP = True
 
@@ -30,8 +31,10 @@ if __name__ == "__main__":
 
     # * Creates an N-D map of the careers based on who had what jobs
     if CREATE_CMAP:
-        cmap = create_career_map()  # cluster_threshold = 25, space_dim = 50
+        cmap = create_career_map()  # space_dim = 50
+        c_labels = group_careers(cmap) # thresholds=[10, 15, 20, 25, 35]
     if DISPLAY_CMAP:
         display_map(cmap)
+        display_groups(c_labels)
 
 
