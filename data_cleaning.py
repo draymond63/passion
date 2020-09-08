@@ -13,17 +13,16 @@ def clean_data(og_file='dump.csv', new_file='dump_cleaned.csv', rep_times=3):
     df['posTitle'] = df['posTitle'].str.lower()
 
 
-    # * Remove acronyms
+    # * Remove acronyms relationsoduct
     # ! DOESNT WORK ON SUBSTRINGS
     df['posTitle'] = df['posTitle'].replace(
-        ['cio', 'ceo', 'cfo', 'coo', 'cmo', 'cto', 'co-founder', '-', 'bi', 'dba', 'qa', 'pmo', 'pr', 'hr', 'sr', 'vp'],
+        ['cio', 'ceo', 'cfo', 'coo', 'cmo', 'cto', '-', 'bi', 'dba', 'qa', 'pmo', 'pr', 'hr', 'sr', 'vp', 'adviser', 'sap', 'leader', 'lead', 'direchief technology officer'],
         ['chief information officer',
         'chief executive officer',
         'chief financial officer',
         'chief operating officer',
         'chief marketing officer',
         'chief technology officer',
-        'cofounder',
         '',
         'business intelligence',
         'database administrator',
@@ -32,15 +31,21 @@ def clean_data(og_file='dump.csv', new_file='dump_cleaned.csv', rep_times=3):
         'public relations',
         'human resources',
         'senior',
-        'vice president'
+        'vice president',
+        'advisor', 
+        'system applications',
+        'manager',
+        'manager',
+        'director',
         ]
     )
 
     # * Character removal 
     # Remove the end of entries with the following symbols
-    df['posTitle'] = df['posTitle'].apply(lambda x: x.split('(')[0].strip())
-    df['posTitle'] = df['posTitle'].apply(lambda x: x.split(',')[0].strip())
-    df['posTitle'] = df['posTitle'].apply(lambda x: x.split('|')[0].strip())
+    df['posTitle'] = df['posTitle'].apply(lambda x: x.split('(')[0])
+    df['posTitle'] = df['posTitle'].apply(lambda x: x.split(',')[0])
+    df['posTitle'] = df['posTitle'].apply(lambda x: x.split('|')[0])
+    df['posTitle'] = df['posTitle'].apply(lambda x: x.strip())
 
     # ? Remove columns with 'and' or '&' in them?
 

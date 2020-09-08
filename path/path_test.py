@@ -81,18 +81,18 @@ def title_availability_stats(graph):
     print(unavailable)
 
 graph = CareerPath('path/career_path_graph_keys.json')
-title_availability_stats(graph)
+# title_availability_stats(graph)
 # print(tree_stats(graph, 1))
 # print(tree_stats(graph, 2))
 # print(tree_stats(graph, 3))
 # print(tree_stats(graph, 4))
 
-# job = 'Nurse'
-# tree = graph.get_path(job, 1)
-# print_tree(tree)
-# tree = graph.get_path(job, 2)
-# print_tree(tree)
-# tree = graph.get_path(job, 3)
-# print_tree(tree)
-# tree = graph.get_path(job, 4)
-# print_tree(tree)
+job = 'Engineer'
+tree = graph.get_path(job, 1)
+print_tree(tree)
+tree = graph.get_path(job, 2)
+print_tree(tree)
+tree = graph.get_path(job, 3)
+print_tree(tree)
+tree = graph.get_path(job, 4)
+print_tree(tree)
