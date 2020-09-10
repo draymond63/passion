@@ -4,6 +4,6 @@
 *.pdf
 */testing/
 */node_modules/
-/scraping/
+api/secret_file.json
 
 *__pycache__
