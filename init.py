@@ -1,5 +1,6 @@
 ### Kaggle import: https://github.com/Kaggle/kaggle-api
 # kaggle datasets download -f dump.csv --unzip killbot/linkedin-profiles-and-jobs-data
+import pandas as pd
 
 from data_cleaning import clean_data
 
@@ -15,6 +16,7 @@ CREATE_DATA = True
 CREATE_PATH_GRAPH = True
 CREATE_CMAP = True
 DISPLAY_CMAP = True
+DISPLAY_GROUPS = True
 
 if __name__ == "__main__":
     # * Clean the data and assign key tags to each job (based off term frequency)
@@ -29,12 +31,14 @@ if __name__ == "__main__":
     if CREATE_PATH_GRAPH:
         compile_prereq_graph()
 
-    # * Creates an N-D map of the careers based on who had what jobs
+    # * Creates a map of the careers based on who had what jobs (and label clusters)
     if CREATE_CMAP:
         cmap = create_career_map()  # space_dim = 50
         c_labels = group_careers(cmap) # thresholds=[10, 15, 20, 25, 35]
     if DISPLAY_CMAP:
-        display_map(cmap)
+        cmap = pd.merge(cmap, c_labels.filter(['tfidfKey', 'cmap_20']), on='tfidfKey')
+        display_map(cmap, color_col='cmap_20')
+    if DISPLAY_GROUPS:
         display_groups(c_labels)
 
 

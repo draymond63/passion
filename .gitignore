@@ -4,6 +4,7 @@
 *.pdf
 */testing/
 */node_modules/
-/scraping/
+/api/
+/compilation/
 
 *__pycache__

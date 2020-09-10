@@ -1,9 +1,12 @@
 import pandas as pd
-from career_map_compile import cluster_mapping
 import plotly.express as px
+if __name__ == "__main__":
+    from career_map_compile import cluster_mapping
+else:
+    from map.career_map_compile import cluster_mapping
 
 # * Appends a bunch of different labels depending on the cluster thresholds
-def group_careers(cmap='map/career_map.csv', new_file='map/career_groups.csv', title_col='tfidfKey', thresholds=[10, 15, 20, 25, 35, 45]):
+def group_careers(cmap='map/career_map.csv', new_file='map/career_groups.csv', title_col='tfidfKey', thresholds=[10, 15, 20, 25, 35]):
     if isinstance(cmap, str):
         cmap = pd.read_csv(cmap)
     print(f'\nCAREER GROUPING WITH {len(thresholds)} THRESHOLDS')
