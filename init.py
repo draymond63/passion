@@ -10,7 +10,7 @@ from tfidf.manual_clean import clean_tfidf_keys
 
 from path.career_path_compile import compile_prereq_graph
 from map.career_map_compile import create_career_map, display_map
-from map.career_grouping import group_careers, group_to_graph, display_graph
+from map.career_grouping import group_careers, group_to_graph, edit_graph, display_graph
 
 CREATE_DATA = True
 CREATE_PATH_GRAPH = True
@@ -36,6 +36,7 @@ if __name__ == "__main__":
         cmap = create_career_map()  # space_dim = 50
         c_labels = group_careers(cmap) # thresholds=[10, 15, 20, 25, 35]
         c_graph = group_to_graph(c_labels)
+        edit_graph(c_graph)
     if DISPLAY_CMAP:
         cmap = pd.merge(cmap, c_labels.filter(['tfidfKey', 'cmap_20']), on='tfidfKey')
         display_map(cmap, color_col='cmap_20')

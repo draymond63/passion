@@ -4,7 +4,7 @@ from json import dump
 from Passion.map.career_map_compile import cluster_mapping
 
 # * Appends a bunch of different labels depending on the cluster thresholds
-def group_careers(cmap='map/career_map.csv', new_file='map/career_groups.csv', title_col='tfidfKey', thresholds=[10, 15, 20, 25, 35]):
+def group_careers(cmap='map/career_map.csv', new_file='map/career_groups.csv', title_col='tfidfKey', thresholds=[10, 15, 20, 25, 35]) -> pd.DataFrame:
     if isinstance(cmap, str):
         cmap = pd.read_csv(cmap)
     print(f'\nCAREER GROUPING WITH {len(thresholds)} THRESHOLDS')
@@ -21,41 +21,34 @@ def group_careers(cmap='map/career_map.csv', new_file='map/career_groups.csv', t
         df.to_csv(new_file)
     return df
 
-def prevent_loop(graph, parent):
-    queue = [parent]
-    while (len(queue)):
-        # Add the nodes children to the queue
-        queue.extend(graph[queue[0]])
-        # Remove the parent
-        queue = queue[1:]
-        # If the OG parent is back in the queue, there's a loop
-        if parent in queue:
-            return True
-    return False
-
-def group_to_graph(labels='map/career_groups.csv', new_file='map/career_groups.json'):
+def group_to_graph(labels='map/career_groups.csv', new_file='map/career_groups_graph.json', reverse_cols=True) -> dict:
     if isinstance(labels, str):
         labels = pd.read_csv(labels)
 
-    # Assumes columns increase in priority from left to right
+    # Reverse the columns so we can iterate through the rows left to right
+    if reverse_cols:
+        labels = labels.iloc[:, ::-1]
+
+    # Assumes columns decrease in priority from left to right
     prev_col = None
     graph = dict()
     for col_name in labels:
         column = labels[col_name]
-        # Look at each entry in the column
-        for i, parent in column.items():
-            if parent not in graph:
-                graph[parent] = []
 
-            # Make sure there is a parent column
+        # Look at each entry in the column
+        for i, child in column.items():
+            # Make sure there is a previous column
             if not isinstance(prev_col, type(None)):
-                child = prev_col.iloc[i]
-                # Add the child, saying that is a subcategory of the parent
-                if parent != child and child not in graph[parent]:
+                parent = prev_col.iloc[i]
+
+                # Add the parent, saying that is a subcategory of the child
+                if child not in graph:
                     graph[parent].append(child)
-                    # Make sure no loops are being created
-                    if prevent_loop(graph, parent):
-                        graph[parent].remove(child)
+                    # It is now a node in our graph
+                    graph[child] = []  
+            # Special case for the big boy parents
+            else:
+                graph[child] = []
         # The previous column is now the column we just iterated over
         prev_col = column
     
@@ -64,6 +57,34 @@ def group_to_graph(labels='map/career_groups.csv', new_file='map/career_groups.j
             dump(graph, f)
     return graph
 
+# * Editing functions
+def split_graph_node(graph, node, min_children=5):
+    for child in graph[node]:
+        queue = [child]
+        child_strength = 0
+
+        while (child_strength < min_children and queue):
+            second_children = graph[queue[0]]
+            queue.extend(second_children)
+            queue = queue[1:]
+            child_strength += len(second_children)
+
+        if child_strength >= min_children:
+            graph[node].remove(child)
+
+def rename_node(graph, old_name, new_name):
+    # Change all dependencies
+    for node in graph:
+        if old_name in graph[node]:
+            graph.remove(old_name)
+            graph.append(new_name)
+    # Rename actual node
+    graph[new_name] = graph[old_name]
+    del graph[old_name]
+
+def edit_graph(graph, trim_nodes=['manager']):
+    for node in trim_nodes:
+        split_graph_node(graph, node)
 
 # * Displays the trees for testing
 def display_graph(graph, html_file=None):
@@ -94,4 +115,5 @@ def display_graph(graph, html_file=None):
 if __name__ == "__main__":
     df = group_careers(new_file=None)
     df = group_to_graph(df)
+    edit_graph(df)
     display_graph(df) # , html_file='map/career_grouping_tree.html'
