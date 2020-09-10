@@ -1,9 +1,7 @@
 import pandas as pd
 import plotly.express as px
-if __name__ == "__main__":
-    from career_map_compile import cluster_mapping
-else:
-    from map.career_map_compile import cluster_mapping
+from json import dump
+from Passion.map.career_map_compile import cluster_mapping
 
 # * Appends a bunch of different labels depending on the cluster thresholds
 def group_careers(cmap='map/career_map.csv', new_file='map/career_groups.csv', title_col='tfidfKey', thresholds=[10, 15, 20, 25, 35]):
@@ -23,29 +21,66 @@ def group_careers(cmap='map/career_map.csv', new_file='map/career_groups.csv', t
         df.to_csv(new_file)
     return df
 
-# * Displays the trees for testing
-def display_groups(df, html_file=None):
-    # Reverse the columns so we can iterate through the rows left to right
-    df = df.iloc[:, ::-1]
-    labels = []
-    parents = []
-    # Iterate through each column
-    # Assumes each key has a common parent trhoughout all the rows
+def prevent_loop(graph, parent):
+    queue = [parent]
+    while (len(queue)):
+        # Add the nodes children to the queue
+        queue.extend(graph[queue[0]])
+        # Remove the parent
+        queue = queue[1:]
+        # If the OG parent is back in the queue, there's a loop
+        if parent in queue:
+            return True
+    return False
+
+def group_to_graph(labels='map/career_groups.csv', new_file='map/career_groups.json'):
+    if isinstance(labels, str):
+        labels = pd.read_csv(labels)
+
+    # Assumes columns increase in priority from left to right
     prev_col = None
-    for col_name in df:
-        column = df[col_name]
-        # Look at each key and if it is new, add it and it's parent
-        for i, key in column.items():
-            if key not in labels:
-                labels.append(key)
-                # If we have a column before it, give it a parent
-                if isinstance(prev_col, type(None)):
-                    parent = ''
-                else:
-                    parent = prev_col.iloc[i]
-                parents.append(parent)
+    graph = dict()
+    for col_name in labels:
+        column = labels[col_name]
+        # Look at each entry in the column
+        for i, parent in column.items():
+            if parent not in graph:
+                graph[parent] = []
+
+            # Make sure there is a parent column
+            if not isinstance(prev_col, type(None)):
+                child = prev_col.iloc[i]
+                # Add the child, saying that is a subcategory of the parent
+                if parent != child and child not in graph[parent]:
+                    graph[parent].append(child)
+                    # Make sure no loops are being created
+                    if prevent_loop(graph, parent):
+                        graph[parent].remove(child)
         # The previous column is now the column we just iterated over
         prev_col = column
+    
+    if new_file:
+        with open(new_file, 'w') as f:
+            dump(graph, f)
+    return graph
+
+
+# * Displays the trees for testing
+def display_graph(graph, html_file=None):
+    labels = []
+    parents = []
+    # Assumes each key has a common parent throughout all the rows
+    for parent in graph:
+        for child in graph[parent]:
+            if child not in labels:
+                labels.append(child)
+                parents.append(parent)
+    
+    for parent in parents:
+        if parent not in labels:
+            labels.append(parent)
+            parents.append('')
+
     # Display
     fig = px.treemap(
         names = labels,
@@ -57,5 +92,6 @@ def display_groups(df, html_file=None):
         fig.write_html(html_file)
 
 if __name__ == "__main__":
-    df = group_careers()
-    display_groups(df) # , html_file='map/career_grouping_tree.html'
+    df = group_careers(new_file=None)
+    df = group_to_graph(df)
+    display_graph(df) # , html_file='map/career_grouping_tree.html'

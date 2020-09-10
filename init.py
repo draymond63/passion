@@ -10,11 +10,11 @@ from tfidf.manual_clean import clean_tfidf_keys
 
 from path.career_path_compile import compile_prereq_graph
 from map.career_map_compile import create_career_map, display_map
-from map.career_grouping import group_careers, display_groups
+from map.career_grouping import group_careers, group_to_graph, display_graph
 
 CREATE_DATA = True
 CREATE_PATH_GRAPH = True
-CREATE_CMAP = True
+CREATE_CMAP_DATA = True
 DISPLAY_CMAP = True
 DISPLAY_GROUPS = True
 
@@ -32,13 +32,14 @@ if __name__ == "__main__":
         compile_prereq_graph()
 
     # * Creates a map of the careers based on who had what jobs (and label clusters)
-    if CREATE_CMAP:
+    if CREATE_CMAP_DATA:
         cmap = create_career_map()  # space_dim = 50
         c_labels = group_careers(cmap) # thresholds=[10, 15, 20, 25, 35]
+        c_graph = group_to_graph(c_labels)
     if DISPLAY_CMAP:
         cmap = pd.merge(cmap, c_labels.filter(['tfidfKey', 'cmap_20']), on='tfidfKey')
         display_map(cmap, color_col='cmap_20')
     if DISPLAY_GROUPS:
-        display_groups(c_labels)
+        display_graph(c_graph)
 
 
