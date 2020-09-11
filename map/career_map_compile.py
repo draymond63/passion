@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from json import load
 import plotly.express as px
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
@@ -101,10 +102,26 @@ def create_career_map(og_file='dump_cleaned.csv', new_file='map/career_map.csv',
 
     return cmap
 
-def display_map(cmap: pd.DataFrame, color_col='cmapKey', name_col='tfidfKey', html_file=None):
+def display_map(cmap, color_col='cmapKey', name_col='tfidfKey', color_graph=None, html_file=None):
     # Read in the data if a filename is given
     if isinstance(cmap, str):
         cmap = pd.read_csv(cmap)
+
+    # If graph (dict) is given, it needs to be parsed
+    if color_graph:
+        # Dict that is going to be converted into a dataframe and append to the cmap
+        pd_prep = {color_col: [], name_col: []}
+        for node in color_graph:
+            node = color_graph[node]
+            # If it is a leaf node, that means it is in the smallest category
+            if node['is_leaf']:
+                pd_prep[name_col].append(node['name'])
+                pd_prep[color_col].append(node['top_parent'])
+
+        # Merge the data in
+        colors = pd.DataFrame(pd_prep)
+        print('Categories:', colors[color_col].nunique())
+        cmap = pd.merge(cmap, colors, on=name_col)
 
     # Slice data to be TSNE'd
     non_data_cols = [color_col, name_col]
@@ -138,8 +155,7 @@ def display_map(cmap: pd.DataFrame, color_col='cmapKey', name_col='tfidfKey', ht
 
 if __name__ == "__main__":
     cmap = create_career_map(new_file=None)
-    # Add a name to the groups
-    categories = cluster_mapping(cmap, cluster_threshold=30)
-    cmap = pd.merge(cmap, categories, on='tfidfKey')
+    with open('map/career_groups_graph.json', 'r') as f:
+        graph = load(f)
     # Display the data!
-    display_map(cmap) # , html_file='map/2DCareerPlot.html'
+    display_map(cmap, color_graph=graph) # , html_file='map/2DCareerPlot.html'

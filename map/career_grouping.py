@@ -34,6 +34,8 @@ def group_to_graph(labels='map/career_groups.csv', new_file='map/career_groups_g
     graph = dict()
     for col_name in labels:
         column = labels[col_name]
+        # Used for leaf node values
+        is_last = True if col_name == labels.columns[-1] else False
 
         # Look at each entry in the column
         for i, child in column.items():
@@ -41,14 +43,34 @@ def group_to_graph(labels='map/career_groups.csv', new_file='map/career_groups_g
             if not isinstance(prev_col, type(None)):
                 parent = prev_col.iloc[i]
 
-                # Add the parent, saying that is a subcategory of the child
+                # Add the child, saying that is a subcategory of the parent
                 if child not in graph:
-                    graph[parent].append(child)
                     # It is now a node in our graph
-                    graph[child] = []  
+                    graph[parent]['child'].append(child)
+                    # Keep track of it's parents for future reference
+                    node_parents = list(labels.loc[i, :col_name])
+                    # Only keep the row up until itself
+                    node_index = node_parents.index(child)
+                    node_parents = node_parents[:node_index]
+                    # Add the node
+                    node = {
+                        'name': child,
+                        'parents': node_parents,
+                        'top_parent': node_parents[0],
+                        'child': [],
+                        'is_leaf': is_last
+                    }
+                    graph[child] = node
             # Special case for the big boy parents
             else:
-                graph[child] = []
+                node = {
+                    'name': child,
+                    'parents': [],
+                    'top_parent': None,
+                    'child': [],
+                    'is_leaf': False
+                }
+                graph[child] = node
         # The previous column is now the column we just iterated over
         prev_col = column
     
@@ -59,25 +81,29 @@ def group_to_graph(labels='map/career_groups.csv', new_file='map/career_groups_g
 
 # * Editing functions
 def split_graph_node(graph, node, min_children=5):
-    for child in graph[node]:
+    for child in graph[node]['child']:
         queue = [child]
         child_strength = 0
 
         while (child_strength < min_children and queue):
-            second_children = graph[queue[0]]
+            second_children = graph[queue[0]]['child']
             queue.extend(second_children)
             queue = queue[1:]
             child_strength += len(second_children)
 
         if child_strength >= min_children:
-            graph[node].remove(child)
+            graph[node]['child'].remove(child)
 
 def rename_node(graph, old_name, new_name):
+    assert old_name in graph, f'{old_name} is not a node in the graph'
     # Change all dependencies
     for node in graph:
-        if old_name in graph[node]:
-            graph.remove(old_name)
-            graph.append(new_name)
+        if old_name in graph[node]['child']:
+            # Rename the key of the child
+            graph[node]['child'].append(graph[node]['child'][old_name])
+            graph[node]['child'].remove(old_name)
+            # Rename the attribute of the new child
+            graph[node]['child'][-1]['name'] = new_name
     # Rename actual node
     graph[new_name] = graph[old_name]
     del graph[old_name]
@@ -92,7 +118,7 @@ def display_graph(graph, html_file=None):
     parents = []
     # Assumes each key has a common parent throughout all the rows
     for parent in graph:
-        for child in graph[parent]:
+        for child in graph[parent]['child']:
             if child not in labels:
                 labels.append(child)
                 parents.append(parent)

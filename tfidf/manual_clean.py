@@ -13,7 +13,7 @@ def clean_tfidf_keys(og_file='dump_cleaned.csv', num_col='tfidfKeyNum', name_col
 
     merge_keys = [
         ['banker', 'private banker', 'personal banker'],
-        ['fellow', 'visiting fellow', 'adjunct research fellow', 'honorary fellow', 'teaching fellow', 'postdoctoral fellow', 'research fellow'],
+        ['fellow', 'visit fellow', 'adjunct research fellow', 'honorary fellow', 'teaching fellow', 'postdoctoral fellow', 'research fellow'],
         ['web developer', 'front end', 'frontend developer', 'web development', 'web architect'],
         ['researcher', 'visiting reseracher', 'student researcher'],
         ['project manager', 'project lead'],

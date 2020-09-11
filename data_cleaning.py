@@ -17,22 +17,28 @@ replacements = {
     'pmo': 'project management office', 
     'pr': 'public relations', 
     'hr': 'human resources', 
+    'sr.': 'senior', 
     'sr': 'senior', 
+    'snr': 'senior', 
     'vp': 'vice president', 
     'adviser': 'advisor', 
     'sap': 'system applications', 
     'leader': 'manager', 
-    'lead': 'manager'
+    'lead': 'manager',
+    'gi specialist': 'gastroenterologist'
 }
 
 def lemmatize(item: str) -> str:
+    stop_words = ['ios']
+
     wordnet_lemmatizer = WordNetLemmatizer()
     # Break the string into a list of words
     words = word_tokenize(item)
     # Reduce each word to a lemma
-    for i, word in enumerate(words):                    
-        new_word = wordnet_lemmatizer.lemmatize(word)
-        words[i] = new_word
+    for i, word in enumerate(words): 
+        if word not in stop_words:                   
+            new_word = wordnet_lemmatizer.lemmatize(word)
+            words[i] = new_word
     # Replace the entry with the final item
     new_item = ' '.join(words)
     return new_item

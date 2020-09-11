@@ -38,8 +38,7 @@ if __name__ == "__main__":
         c_graph = group_to_graph(c_labels)
         edit_graph(c_graph)
     if DISPLAY_CMAP:
-        cmap = pd.merge(cmap, c_labels.filter(['tfidfKey', 'cmap_20']), on='tfidfKey')
-        display_map(cmap, color_col='cmap_20', html_file='map/2D_career_plot.html')
+        display_map(cmap, color_col='cmap_20', color_graph=c_graph, html_file='map/2D_career_plot.html')
     if DISPLAY_GROUPS:
         display_graph(c_graph, html_file='map/career_grouping_tree.html')
 
