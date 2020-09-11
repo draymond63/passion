@@ -6,5 +6,6 @@
 */node_modules/
 /api/
 /compilation/
+/wordnet/
 
 *__pycache__
