@@ -102,7 +102,7 @@ def create_career_map(og_file='dump_cleaned.csv', new_file='map/career_map.csv',
 
     return cmap
 
-def display_map(cmap, color_col='cmapKey', name_col='tfidfKey', color_graph=None, html_file=None):
+def display_map(cmap, color_col='cmap_35', name_col='tfidfKey', color_graph=None, html_file=None):
     # Read in the data if a filename is given
     if isinstance(cmap, str):
         cmap = pd.read_csv(cmap)
@@ -111,16 +111,13 @@ def display_map(cmap, color_col='cmapKey', name_col='tfidfKey', color_graph=None
     if color_graph:
         # Dict that is going to be converted into a dataframe and append to the cmap
         pd_prep = {color_col: [], name_col: []}
+        # Assumes each key has a common parent throughout all the rows
         for node in color_graph:
-            node = color_graph[node]
-            # If it is a leaf node, that means it is in the smallest category
-            if node['is_leaf']:
-                pd_prep[name_col].append(node['name'])
-                pd_prep[color_col].append(node['top_parent'])
-
+            if color_graph[node]['level'][1] == name_col:
+                pd_prep[name_col].append(node)
+                pd_prep[color_col].append(color_graph[node]['top_parent'])
         # Merge the data in
         colors = pd.DataFrame(pd_prep)
-        print('Categories:', colors[color_col].nunique())
         cmap = pd.merge(cmap, colors, on=name_col)
 
     # Slice data to be TSNE'd
@@ -140,14 +137,16 @@ def display_map(cmap, color_col='cmapKey', name_col='tfidfKey', color_graph=None
     print(cmap.head())
 
     # Make sure the colors discontinous and in order
-    if isinstance(cmap[color_col].iloc[0], np.int64):
-        cmap.sort_values(color_col, ascending=True, inplace=True)
+    if cmap[color_col].dtype == np.int64:
+        cmap.sort_values(color_col, inplace=True)
         cmap[color_col] = cmap[color_col].apply(lambda x: str(x))
 
     fig = px.scatter(cmap, 
         x=0, y=1,
         color=color_col,
-        hover_name=name_col
+        hover_name=name_col,
+        range_x=[-35, 35],
+        range_y=[-30, 35]
     )
     fig.show()
     if html_file:

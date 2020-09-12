@@ -26,7 +26,7 @@ if __name__ == "__main__":
         # Defaults to appending tfidf keys
         tfidf_cluster.append_keys() # cluster_threshold = 1
         clean_tfidf_keys()
-
+    
     # * Use this graph in the path_test & path_use files
     if CREATE_PATH_GRAPH:
         compile_prereq_graph()
@@ -38,7 +38,7 @@ if __name__ == "__main__":
         c_graph = group_to_graph(c_labels)
         edit_graph(c_graph)
     if DISPLAY_CMAP:
-        display_map(cmap, color_col='cmap_20', color_graph=c_graph, html_file='map/2D_career_plot.html')
+        display_map(cmap, color_col='Job Category', color_graph=c_graph, html_file='map/2D_career_plot.html')
     if DISPLAY_GROUPS:
         display_graph(c_graph, html_file='map/career_grouping_tree.html')
 

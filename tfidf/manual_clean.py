@@ -13,19 +13,17 @@ def clean_tfidf_keys(og_file='dump_cleaned.csv', num_col='tfidfKeyNum', name_col
 
     merge_keys = [
         ['banker', 'private banker', 'personal banker'],
-        ['fellow', 'visit fellow', 'adjunct research fellow', 'honorary fellow', 'teaching fellow', 'postdoctoral fellow', 'research fellow'],
-        ['web developer', 'front end', 'frontend developer', 'web development', 'web architect'],
-        ['researcher', 'visiting reseracher', 'student researcher'],
+        ['fellow', 'adjunct research fellow', 'honorary fellow', 'teaching fellow', 'research fellow'],
+        ['web developer', 'front end developer'],
+        ['researcher', 'visiting researcher', 'student researcher'],
         ['project manager', 'project lead'],
-        ['lecturer', 'lecturer tutor', 'visiting lecturer', 'lecturer excercise', 'adjunct lecturer', 'adjunct professor', 'guest lecturer'],
-        ['registered nurse', 'clinical nurse'],
-        ['keynote presenter', 'keynote speaker', 'guest speaker'],
+        ['lecturer',  'visiting lecturer', 'adjunct lecturer', 'adjunct professor'],
+        ['registered nurse', 'clinical nurse specialist'],
+        ['keynote speaker', 'keynote presenter'],
         ['auditor', 'internal auditor', 'external auditor'],
-        ['manager', 'group manager', 'lead', 'group leader'],
-        ['software developer', 'software engineer', 'software engineering', 'software development', 'senior software'],
-        ['professor of finance', 'professor of economics'],
-        ['project manager', 'project leader'],
-        ['student', 'casual academic', 'sessional academic']
+        ['manager', 'group manager'],
+        ['software developer', 'software engineer'],
+        ['student', 'sessional academic']
     ]
     for group in merge_keys:
         # Gather all the relavent group numbers associated with the titles

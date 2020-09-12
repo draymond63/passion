@@ -14,12 +14,21 @@ def group_careers(cmap='map/career_map.csv', new_file='map/career_groups.csv', t
     for threshold in thresholds:
         groups = cluster_mapping(cmap, f'cmap_{threshold}', title_col, threshold)
         df = pd.merge(df, groups, on=title_col)
-
     print(df.head())
 
     if new_file:
         df.to_csv(new_file)
     return df
+
+# * JSON graph functions
+def create_node(name, p, tp, col_num, col_name):
+    return {
+        'name': name,
+        'parent': p,
+        'top_parent': tp,
+        'child': [],
+        'level': (col_num, col_name),
+    }
 
 def group_to_graph(labels='map/career_groups.csv', new_file='map/career_groups_graph.json', reverse_cols=True) -> dict:
     if isinstance(labels, str):
@@ -32,11 +41,8 @@ def group_to_graph(labels='map/career_groups.csv', new_file='map/career_groups_g
     # Assumes columns decrease in priority from left to right
     prev_col = None
     graph = dict()
-    for col_name in labels:
+    for col_num, col_name in enumerate(labels):
         column = labels[col_name]
-        # Used for leaf node values
-        is_last = True if col_name == labels.columns[-1] else False
-
         # Look at each entry in the column
         for i, child in column.items():
             # Make sure there is a previous column
@@ -45,32 +51,15 @@ def group_to_graph(labels='map/career_groups.csv', new_file='map/career_groups_g
 
                 # Add the child, saying that is a subcategory of the parent
                 if child not in graph:
-                    # It is now a node in our graph
+                    # Give the parent a child
                     graph[parent]['child'].append(child)
-                    # Keep track of it's parents for future reference
-                    node_parents = list(labels.loc[i, :col_name])
-                    # Only keep the row up until itself
-                    node_index = node_parents.index(child)
-                    node_parents = node_parents[:node_index]
+                    # Keep track of it's top parent for future reference
+                    top_parent = labels.iloc[i, 0]
                     # Add the node
-                    node = {
-                        'name': child,
-                        'parents': node_parents,
-                        'top_parent': node_parents[0],
-                        'child': [],
-                        'is_leaf': is_last
-                    }
-                    graph[child] = node
+                    graph[child] = create_node(child, parent, top_parent, col_num, col_name)
             # Special case for the big boy parents
             else:
-                node = {
-                    'name': child,
-                    'parents': [],
-                    'top_parent': None,
-                    'child': [],
-                    'is_leaf': False
-                }
-                graph[child] = node
+                graph[child] = create_node(child, '', '', col_num, col_name)
         # The previous column is now the column we just iterated over
         prev_col = column
     
@@ -79,20 +68,51 @@ def group_to_graph(labels='map/career_groups.csv', new_file='map/career_groups_g
             dump(graph, f)
     return graph
 
-# * Editing functions
-def split_graph_node(graph, node, min_children=5):
+# * Graph editing functions
+def find_children(graph, node):
+    seen = []
+    queue = [node]
+    # Find all the nodes children and tell it that it is boss
+    while (queue):
+        children = graph[queue[0]]['child']
+        # Move an the item from the queue
+        seen.append(queue[0])
+        queue = queue[1:]
+        # Add all unseen items to the queue
+        for item in children:
+            if item not in seen:
+                queue.append(item)
+
+    # Return only unique items
+    seen_u = []
+    for item in seen:
+        if item not in seen_u:
+            seen_u.append(item)
+    return seen_u
+
+def move_node_to_top(graph, node, parent):
+    seen = find_children(graph, node)
+    # Tell the child's children they have to edit their top parents
+    for item in seen:
+        graph[item]['top_parent'] = node
+    # Edit the actual node since it is now a top level node
+    graph[node]['top_parent'] = ''
+    graph[node]['parent'] = ''
+    graph[node]['level'] = graph[parent]['level']
+
+def split_top_parent(graph, node, min_size=10):
+    assert graph[node]['level'][0] == 0, f'Splitting must only occur at the top level, received {node} at level {graph[node]["level"]}'
+
+    new_children = graph[node]['child'].copy()
     for child in graph[node]['child']:
-        queue = [child]
-        child_strength = 0
-
-        while (child_strength < min_children and queue):
-            second_children = graph[queue[0]]['child']
-            queue.extend(second_children)
-            queue = queue[1:]
-            child_strength += len(second_children)
-
-        if child_strength >= min_children:
-            graph[node]['child'].remove(child)
+        # Find the child's children
+        seen = find_children(graph, child)
+        # Check if it passes the criteria
+        if len(seen) >= min_size:
+            move_node_to_top(graph, child, node)
+            # Remove it from the main node's children
+            new_children.remove(child)
+    graph[node]['child'] = new_children
 
 def rename_node(graph, old_name, new_name):
     assert old_name in graph, f'{old_name} is not a node in the graph'
@@ -108,26 +128,19 @@ def rename_node(graph, old_name, new_name):
     graph[new_name] = graph[old_name]
     del graph[old_name]
 
-def edit_graph(graph, trim_nodes=['manager']):
+def edit_graph(graph, trim_nodes=['manager', 'gi']):
     for node in trim_nodes:
-        split_graph_node(graph, node)
+        split_top_parent(graph, node)
 
 # * Displays the trees for testing
 def display_graph(graph, html_file=None):
     labels = []
     parents = []
     # Assumes each key has a common parent throughout all the rows
-    for parent in graph:
-        for child in graph[parent]['child']:
-            if child not in labels:
-                labels.append(child)
-                parents.append(parent)
-    
-    for parent in parents:
-        if parent not in labels:
-            labels.append(parent)
-            parents.append('')
-
+    for node in graph:
+        if node not in labels:
+            labels.append(node)
+            parents.append(graph[node]['parent'])
     # Display
     fig = px.treemap(
         names = labels,
@@ -140,6 +153,6 @@ def display_graph(graph, html_file=None):
 
 if __name__ == "__main__":
     df = group_careers(new_file=None)
-    df = group_to_graph(df)
-    edit_graph(df)
-    display_graph(df) # , html_file='map/career_grouping_tree.html'
+    graph = group_to_graph(df)
+    edit_graph(graph)
+    display_graph(graph) # , html_file='map/career_grouping_tree.html'

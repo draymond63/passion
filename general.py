@@ -49,7 +49,7 @@ def name_group(titles: pd.Series) -> str:
     # Get all the unique words in the series
     words = set(total.split(' '))
     # Remove words that are fillers
-    stop_words = set(['in', 'of', '-', '&'])
+    stop_words = set(['in', 'of', '-', '&', 'the', 'a', 'an'])
     words = words - stop_words
 
     counts = {}

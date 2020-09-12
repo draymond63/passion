@@ -11,6 +11,7 @@ replacements = {
     'cmo': 'chief marketing officer', 
     'cto': 'chief technology officer', 
     '-': '', 
+    'frontend': 'front end',
     'bi': 'business intelligence', 
     'dba': 'database administrator', 
     'qa': 'quality assurance', 
@@ -25,11 +26,12 @@ replacements = {
     'sap': 'system applications', 
     'leader': 'manager', 
     'lead': 'manager',
-    'gi specialist': 'gastroenterologist'
+    'gi specialist': 'gastroenterologist',
+    'associate': '',
 }
 
 def lemmatize(item: str) -> str:
-    stop_words = ['ios']
+    stop_words = ['ios', 'vice']
 
     wordnet_lemmatizer = WordNetLemmatizer()
     # Break the string into a list of words
@@ -61,6 +63,7 @@ def clean_data(og_file='dump.csv', new_file='dump_cleaned.csv', rep_times=3):
     df['posTitle'] = df['posTitle'].apply(lambda x: x.split(',')[0])
     df['posTitle'] = df['posTitle'].apply(lambda x: x.split('|')[0])
     df['posTitle'] = df['posTitle'].apply(lambda x: x.split(':')[0])
+    df['posTitle'] = df['posTitle'].apply(lambda x: x.split('/')[0])
     df['posTitle'] = df['posTitle'].apply(lambda x: x.split(' - ')[0])
     df['posTitle'] = df['posTitle'].apply(lambda x: x.strip())
 
@@ -69,12 +72,12 @@ def clean_data(og_file='dump.csv', new_file='dump_cleaned.csv', rep_times=3):
     # https://stackoverflow.com/questions/6713310/regex-specify-space-or-start-of-string-and-space-or-end-of-string
     reg_repl = {}
     for key in replacements:
-        reg_repl[r'(^|\s)' + key+ r'[\b\s]'] = replacements[key]
+        reg_repl[r'(^|\s)(' + key + r')[\b\s]'] = ' ' + replacements[key] + ' '
     df['posTitle'].replace(regex=reg_repl, inplace=True)
     # * Lemmatization
     df['posTitle'] = df['posTitle'].apply(lemmatize)
 
-    # ? Remove columns with 'and' or '&' in them?
+    # Remove columns with 'and' or '&' in them?
 
     # * Final touches
     # Remove entries that don't appear that often
