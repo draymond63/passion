@@ -102,7 +102,7 @@ def create_career_map(og_file='dump_cleaned.csv', new_file='map/career_map.csv',
 
     return cmap
 
-def display_map(cmap, color_col='cmap_35', name_col='tfidfKey', color_graph=None, html_file=None):
+def display_map(cmap, color_col='cmap_35', name_col='tfidfKey', color_graph=None, hide=None, html_file=None):
     # Read in the data if a filename is given
     if isinstance(cmap, str):
         cmap = pd.read_csv(cmap)
@@ -119,6 +119,16 @@ def display_map(cmap, color_col='cmap_35', name_col='tfidfKey', color_graph=None
         # Merge the data in
         colors = pd.DataFrame(pd_prep)
         cmap = pd.merge(cmap, colors, on=name_col)
+
+    # Optionally hide certain categories
+    if hide:
+        if isinstance(hide, list):
+            for item in hide:
+                cmap = cmap[cmap[color_col] != item]
+        elif isinstance(hide, str):
+            cmap = cmap[cmap[color_col] != hide]
+        else:
+            raise AssertionError(f'hide must be of type str or list, not {type(hide)}')
 
     # Slice data to be TSNE'd
     non_data_cols = [color_col, name_col]

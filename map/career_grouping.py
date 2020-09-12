@@ -100,7 +100,7 @@ def move_node_to_top(graph, node, parent):
     graph[node]['parent'] = ''
     graph[node]['level'] = graph[parent]['level']
 
-def split_top_parent(graph, node, min_size=10):
+def split_top_parent(graph, node, min_size):
     assert graph[node]['level'][0] == 0, f'Splitting must only occur at the top level, received {node} at level {graph[node]["level"]}'
 
     new_children = graph[node]['child'].copy()
@@ -118,19 +118,26 @@ def rename_node(graph, old_name, new_name):
     assert old_name in graph, f'{old_name} is not a node in the graph'
     # Change all dependencies
     for node in graph:
+        # Rename the child
         if old_name in graph[node]['child']:
-            # Rename the key of the child
-            graph[node]['child'].append(graph[node]['child'][old_name])
+            graph[node]['child'].append(new_name)
             graph[node]['child'].remove(old_name)
-            # Rename the attribute of the new child
-            graph[node]['child'][-1]['name'] = new_name
+        # Rename the parents
+        if old_name == graph[node]['parent']:
+            graph[node]['parent'] = new_name
+        if old_name == graph[node]['top_parent']:
+            graph[node]['top_parent'] = new_name
     # Rename actual node
     graph[new_name] = graph[old_name]
     del graph[old_name]
+    # Rename the attribute of the new child
+    graph[new_name]['name'] = new_name
 
-def edit_graph(graph, trim_nodes=['manager', 'gi']):
+def edit_graph(graph, trim_nodes=['manager', 'gi'], min_size=10):
     for node in trim_nodes:
-        split_top_parent(graph, node)
+        split_top_parent(graph, node, min_size)
+
+    rename_node(graph, 'gi', 'misc')
 
 # * Displays the trees for testing
 def display_graph(graph, html_file=None):
