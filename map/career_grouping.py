@@ -1,6 +1,6 @@
 import pandas as pd
 import plotly.express as px
-from json import dump
+import json
 from Passion.map.career_map_compile import cluster_mapping
 
 # * Appends a bunch of different labels depending on the cluster thresholds
@@ -65,7 +65,7 @@ def group_to_graph(labels='map/career_groups.csv', new_file='map/career_groups_g
     
     if new_file:
         with open(new_file, 'w') as f:
-            dump(graph, f)
+            json.dump(graph, f)
     return graph
 
 # * Graph editing functions

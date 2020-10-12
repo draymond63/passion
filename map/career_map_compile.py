@@ -145,26 +145,26 @@ def display_map(cmap, color_col='cmap_35', name_col='tfidfKey', color_graph=None
         cmap = pd.merge(cmap, data, left_index=True, right_index=True)
 
     print(cmap.head())
-
-    # Make sure the colors discontinous and in order
-    if cmap[color_col].dtype == np.int64:
-        cmap.sort_values(color_col, inplace=True)
-        cmap[color_col] = cmap[color_col].apply(lambda x: str(x))
+    # Remove misc items
+    # cmap = cmap[cmap[color_col] != 'misc']
+    # cmap = cmap[cmap[color_col] != 'manager']
 
     fig = px.scatter(cmap, 
         x=0, y=1,
         color=color_col,
         hover_name=name_col,
         range_x=[-35, 35],
-        range_y=[-30, 35]
+        range_y=[-30, 30],
+        title='Careers Mapped in a 50-D Space and Clustered (Collapsed into 2-D)',
     )
     fig.show()
     if html_file:
         fig.write_html(html_file)
 
 if __name__ == "__main__":
-    cmap = create_career_map(new_file=None)
+    # cmap = create_career_map(new_file=None)
+    cmap = pd.read_csv('map/career_map.csv')
     with open('map/career_groups_graph.json', 'r') as f:
         graph = load(f)
     # Display the data!
-    display_map(cmap, color_graph=graph) # , html_file='map/2DCareerPlot.html'
+    display_map(cmap, color_graph=graph) # , html_file='map/2D_career_plot.html'
