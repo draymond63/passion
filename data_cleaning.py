@@ -26,13 +26,14 @@ def compile_data(r=(17, 30)): # ! NOT DONE
         print(tmp.shape)
 
         df = pd.merge(df, tmp, on=['ref', 'site'], how='outer')
-        df['amt'] = df['amt'] + df['amt-2']
+        df['amt'] = df['amt'] + df['amt-2'] # ! Makes most of them bad
         df = df.drop(['type-2', 'amt-2'], axis=1)
         print("SUM")
         print(df.head())
 
     to_tsv_comp(df, DUMP)
     print(df.shape)
+
 
 
 def get_popularity():

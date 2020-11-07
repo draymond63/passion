@@ -1,7 +1,9 @@
+
+# ! Temporarily missing
 DUMPS = [
     'storage/temp/clickstream-enwiki-2017-11.tsv.gz',
     'storage/temp/clickstream-enwiki-2017-12.tsv.gz',
-    'storage/temp/clickstream-enwiki-2018-01.tsv.gz', # ! MISSING FROM DATA
+    'storage/temp/clickstream-enwiki-2018-01.tsv.gz',
     'storage/temp/clickstream-enwiki-2018-02.tsv.gz',
     'storage/temp/clickstream-enwiki-2018-03.tsv.gz',
     'storage/temp/clickstream-enwiki-2018-04.tsv.gz',
@@ -37,17 +39,17 @@ DUMPS = [
 ]
 
 # * The dump compiled from https://dumps.wikimedia.org/other/clickstream/
-#                        ref                site      path  amt
-# 0   Bathtubs_Over_Broadway  Industrial_musical      link   97
-# 1              other-empty  Industrial_musical  external   88
-# 2         Industrial_music  Industrial_musical      link   67
+#                    ref                site      path  amt
+# Bathtubs_Over_Broadway  Industrial_musical      link   97
+#            other-empty  Industrial_musical  external   88
+#       Industrial_music  Industrial_musical      link   67
 # Unique Sites: 4156721 #!
 # Unique Refs:  2006915 #!
 # Shape:  (50990825, 4)
 DUMP = 'storage/clickstream-combined.tsv.gz'
 COLUMNS = ['ref', 'site', 'type', 'amt']
 
-# * How many times a user was sent to a given site (POPULARITY)
+# ! How many times a user was sent to a given site (POPULARITY)
 # 2012_Oregon_State_Beavers_football_team    320
 # 37th_(North_Hampshire)_Regiment_of_Foot    214
 # Any_key                                    916
@@ -58,6 +60,20 @@ POP_DUMP = 'storage/wiki-popularity.tsv'
 CLEAN_DUMP = 'storage/cleaned_clickstream.tsv'
 
 
+# * Vital repos from https://en.wikipedia.org/wiki/Wikipedia:Vital_articles/
+# ! should have 10043, but has 10064
+#     l3            l2      l1              name              site
+# Actors  Entertainers  People     Julie Andrews     Julie_Andrews
+# Actors  Entertainers  People     Lauren Bacall     Lauren_Bacall
+# Shape: (10064, 5)
+VITALS = 'storage/vitals.csv'
+VITALS_JSON = 'storage/vitals.json'
+
+# * Matrix of the clean dump, PMI'd -> initial coordinates
+MATRIX = 'storage/clickstream-matrix.tsv'
+C_MATRIX = 'storage/matrix-compact.tsv'
+
+# ? Start of general purpose functions
 import pandas as pd
 
 def to_tsv_comp(df, name):
