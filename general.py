@@ -49,23 +49,16 @@ DUMPS = [
 DUMP = 'storage/clickstream-combined.tsv.gz'
 COLUMNS = ['ref', 'site', 'type', 'amt']
 
-# ! How many times a user was sent to a given site (POPULARITY)
-# 2012_Oregon_State_Beavers_football_team    320
-# 37th_(North_Hampshire)_Regiment_of_Foot    214
-# Any_key                                    916
-# Shape: (4156721,)
-POP_DUMP = 'storage/wiki-popularity.tsv'
-
 # * Original dump, but only with the most popular sites
+#
 CLEAN_DUMP = 'storage/cleaned_clickstream.tsv'
 
 
-# * Vital repos from https://en.wikipedia.org/wiki/Wikipedia:Vital_articles/
-# ! should have 10043, but has 10064
+# * Vital repos from https://en.wikipedia.org/wiki/Wikipedia:Vital_articles/4/
 #     l3            l2      l1              name              site
 # Actors  Entertainers  People     Julie Andrews     Julie_Andrews
 # Actors  Entertainers  People     Lauren Bacall     Lauren_Bacall
-# Shape: (10064, 5)
+# Shape: (10064, 5) # ! should have 10043, but has 10064 (21 extra rows)
 VITALS = 'storage/vitals.csv'
 VITALS_JSON = 'storage/vitals.json'
 

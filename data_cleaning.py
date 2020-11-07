@@ -1,7 +1,8 @@
 import pandas as pd
 from os import path
 from tqdm import tqdm
-from general import *
+from general import DUMPS, DUMP, CLEAN_DUMP, VITALS, COLUMNS
+from general import get_dump, to_tsv_comp
 
 # Group all clickstream files
 def compile_data(r=(17, 30)): # ! NOT DONE
@@ -35,36 +36,21 @@ def compile_data(r=(17, 30)): # ! NOT DONE
     print(df.shape)
 
 
-
-def get_popularity():
-    print('Reading in data...')
-    df = get_dump()
-    df = df.filter(['site', 'amt'], axis=1)
-    print('Data read')
-
-    pop = df.groupby('site')['amt'].apply(sum)
-    print(pop.head())
-    print(pop.shape)
-    pop.to_csv(POP_DUMP, sep='\t')
-
 def filter_data(amt=1e4): 
-    pop = pd.read_csv(POP_DUMP, sep='\t')
-    pop = pop.sort_values('amt', ascending=False)
-    top = pop['site'].head(int(amt)) # down from ~50 million
+    vitals = pd.read_csv(VITALS)['site']
 
     print('Reading in data...')
     df = get_dump()
     print(df.head())
     print(df.shape)
-    # Filter out things that aren't in the top 10000 entries
-    df = df[ df['site'].isin(top) ]
-    df = df[ df['ref' ].isin(top) ]
+    # Filter out things that aren't in the vital entries
+    df = df[ df['site'].isin(vitals) ]
+    df = df[ df['ref' ].isin(vitals) ]
     df = df.dropna()
     print(df.head())
     print(df.shape)
     df.to_csv(CLEAN_DUMP, sep='\t', index=False)
 
 if __name__ == "__main__":
-    compile_data()
-    # get_popularity()
-    # filter_data()
+    # compile_data()
+    filter_data()
