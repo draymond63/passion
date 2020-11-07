@@ -90,7 +90,7 @@ def levels_to_df():
                 for name in levels[l1][l2][l3]:
                     df['l1'].append(l1)
                     df['l2'].append(l2)
-                    df['l3'].append(l3)
+                    df['l3'].append(l3 if l3 != 'DEFAULT' else l2)
                     df['name'].append(name)
                     df['site'].append(levels[l1][l2][l3][name])
     df = pd.DataFrame(df)
