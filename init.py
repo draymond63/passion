@@ -1,7 +1,7 @@
 from vital_articles import get_vitals, levels_to_df
 from data_cleaning import filter_data
 
-from map_display import add_selfs,  display_w2v
+from map_display import add_selfs, display_map
 from word2vec.w2v_mapping import file_prep, create_w2v_map
 
 
@@ -16,4 +16,4 @@ if __name__ == "__main__":
     file_prep()
     create_w2v_map()
     # Display w2v vectors
-    display_w2v() # color='l2'
+    display_map() # color='l2'

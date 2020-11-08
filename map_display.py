@@ -6,7 +6,7 @@ import plotly.express as px
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 
-from general import CLEAN_DUMP, MATRIX, C_MATRIX, W2V_MATRIX, VITALS
+from general import CLEAN_DUMP, W2V_MATRIX, VITALS
 from general import get_clean_dump
 
 # Ensures sites are strongest in their own axis
@@ -31,8 +31,8 @@ def add_selfs(save=True):
         df.to_csv(CLEAN_DUMP, sep='\t', index=False)
     return df
 
-def get_centroids(m_file=C_MATRIX, level='l2'):
-    mtrx = pd.read_csv(m_file, index_col='Unnamed: 0')
+def get_centroids(m_file=W2V_MATRIX, level='l2'):
+    mtrx = pd.read_csv(m_file, index_col='site')
     categories = pd.read_csv(VITALS).filter(['site', level])
     df = pd.merge(mtrx, categories, left_index=True, right_on='site')
     df = df.drop('site', axis=1)
@@ -48,16 +48,16 @@ def get_centroids(m_file=C_MATRIX, level='l2'):
     return pd.DataFrame.from_dict(data, orient='index')
 
 
-def display_map(m_file=C_MATRIX, level='site', color='l2', index_col='Unnamed: 0'):
+def display_map(m_file=W2V_MATRIX, level='site', color='l1'):
     assert color in ('site', 'l1', 'l2', 'l3'), "Color must be l1-3 or 'site'"
     assert color in ('l1', 'l2', 'l3'), "Color must be l1-3"
     # Collapse to 2D
     if isinstance(m_file, str):
-        mtrx = pd.read_csv(m_file, index_col=index_col)
+        mtrx = pd.read_csv(m_file, index_col='site')
     else:
         mtrx = m_file
     # Calculate new points
-    tsne = TSNE(n_components=2, random_state=0, verbose=1) # 
+    tsne = TSNE(n_components=2, random_state=0, verbose=1)
     vecs = tsne.fit_transform(mtrx.to_numpy())
     # Replace n-dimensional data with the 2D data
     vecs = pd.DataFrame(vecs)
@@ -77,19 +77,14 @@ def display_map(m_file=C_MATRIX, level='site', color='l2', index_col='Unnamed: 0
         title='Wikipedia Articles, mapped',
     )
     fig.show()
-    fig.write_html(f'storage/wiki/wiki-map({level}->{color}).html')
+    fig.write_html(f'storage/wiki/wiki-map({level}-{color}).html')
 
-def display_centroids():
-    df = get_centroids(level='l3')
-    display_map(df, level='l3', color='l1')
-
-def display_w2v():
-    display_map(W2V_MATRIX, index_col='site')
+def display_centroids(level='l2'):
+    df = get_centroids(level=level)
+    display_map(df, level=level, color='l1')
 
 
 if __name__ == "__main__":
     # df = add_selfs(save=False)
-    # get_matrix(df)
-    # shrink_matrix_dim()
     # display_centroids()
-    display_w2v()
+    display_map()
