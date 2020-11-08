@@ -1,7 +1,7 @@
 from vital_articles import get_vitals, levels_to_df
 from data_cleaning import filter_data
 
-from mapping import add_selfs, get_matrix, display_map
+from map_display import add_selfs,  display_w2v
 from word2vec.w2v_mapping import file_prep, create_w2v_map
 
 
@@ -12,10 +12,8 @@ if __name__ == "__main__":
     filter_data()
     # Say that articles reference themselves (so they are the farthest in their own axis)
     add_selfs()
-    # get_matrix() # ? Not necessary when using w2v
     # W2V stuff
     file_prep()
     create_w2v_map()
-
-
-    # display_map() # color='l2'
+    # Display w2v vectors
+    display_w2v() # color='l2'
