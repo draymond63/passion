@@ -2,13 +2,14 @@ import subprocess
 import os
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
 
 from Passion.general import get_clean_dump
 from Passion.general import SPACE_DIM, W2V_MATRIX
 from Passion.use.test_embedding import evaluate
-file_data = 'word2vec/data.txt'
-file_wv = 'word2vec/wv.txt'
-file_cv = 'word2vec/cv.txt'
+file_data = 'word2vec/temp/data.txt'
+file_wv = 'word2vec/temp/wv.txt'
+file_cv = 'word2vec/temp/cv.txt'
 
 # * Runs the subroutine
 def generate_embedding(**arg_dict):
@@ -68,14 +69,13 @@ def create_w2v_map():
             filename = generate_embedding(p1=p1,p2=p2,**embedding_args)
             embedding_fps.append(filename)
     # Load possible matrices into dataframes
-    embedding_dfs = list(map(load_embedding, embedding_fps))
+    embedding_dfs = list(map(load_embedding, tqdm(embedding_fps)))
     # Evaluate embeddings
     results = [evaluate(df) for df in embedding_dfs]
-    print(results)
     idx = results.index(max(results))
+    print('Best file is', embedding_fps[idx], 'at', max(results)*100, '%')
     # Return the winner!
     winner = embedding_dfs[idx]
-    print(winner.head())
     winner.to_csv(W2V_MATRIX)
 
 
