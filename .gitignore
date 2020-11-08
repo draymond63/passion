@@ -2,6 +2,8 @@
 *.xls
 *.json
 *.pdf
+*.txt
+*.exe
 */testing/
 */node_modules/
 /api/

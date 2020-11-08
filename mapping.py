@@ -4,8 +4,10 @@ from tqdm import tqdm
 
 import plotly.express as px
 from sklearn.manifold import TSNE
+from sklearn.decomposition import PCA
 
-from general import get_clean_dump, CLEAN_DUMP, MATRIX
+from general import CLEAN_DUMP, MATRIX, C_MATRIX, VITALS
+from general import get_clean_dump
 
 # Ensures sites are strongest in their own axis
 def add_selfs(save=True):
@@ -65,24 +67,73 @@ def get_matrix(df=None):
     mtrx = pmi_matrix(mtrx)
     mtrx.to_csv(MATRIX)
 
-def display_map():
-    # Collapse to 2D
+def shrink_matrix_dim(dim=250):
     mtrx = pd.read_csv(MATRIX, index_col='Unnamed: 0')
+    # PCA works for higher dimensions than TSNE
+    pca = PCA(n_components=dim, random_state=0)
+    cmtrx = pca.fit_transform(mtrx.to_numpy())
+    # Use the new data as the columns
+    cmtrx = pd.DataFrame(cmtrx)
+    cmtrx.index = mtrx.index
+    cmtrx.to_csv(C_MATRIX)
+
+def get_centroids(m_file=C_MATRIX, level='l2'):
+    mtrx = pd.read_csv(m_file, index_col='Unnamed: 0')
+    categories = pd.read_csv(VITALS).filter(['site', level])
+    df = pd.merge(mtrx, categories, left_index=True, right_on='site')
+    df = df.drop('site', axis=1)
+
+    data = {}
+    for category, points in df.groupby(level):
+        points = points.drop(level, axis=1)
+        count = points.shape[0]
+        totals = points.sum()
+        center = totals / count # Average coordinates
+        data[category] = center.to_list()
+
+    return pd.DataFrame.from_dict(data, orient='index')
+
+
+def display_map(m_file=C_MATRIX, level='site', color='l2'):
+    assert color in ('site', 'l1', 'l2', 'l3'), "Color must be l1-3 or 'site'"
+    assert color in ('l1', 'l2', 'l3'), "Color must be l1-3"
+    # Collapse to 2D
+    if isinstance(m_file, str):
+        mtrx = pd.read_csv(m_file, index_col='Unnamed: 0')
+    else:
+        mtrx = m_file
     # Calculate new points
-    tsne = TSNE(n_components=2, random_state=0)
+    tsne = TSNE(n_components=2, random_state=0) # , verbose=1
     vecs = tsne.fit_transform(mtrx.to_numpy())
     # Replace n-dimensional data with the 2D data
     vecs = pd.DataFrame(vecs)
-    cmap = pd.merge(mtrx.index, vecs, left_index=True, right_index=True)
+    vecs.index = mtrx.index
+    # Add the categorization for color
+    if color:
+        print(vecs.shape)
+        categories = pd.read_csv(VITALS).filter((level, color)).drop_duplicates()
+        vecs = pd.merge(vecs, categories, left_index=True, right_on=level, how='inner')
+        print(len(mtrx.index))
+        print(vecs[level].nunique())
+        print(vecs.shape)
     # Display!
-    fig = px.scatter(cmap, 
+    fig = px.scatter(vecs, 
         x=0, y=1,
-        # color=color_col,
-        hover_name='index',
+        color=color,
+        hover_name=level,
         title='Wikipedia Articles, mapped',
     )
-    fig.show()
+    # fig.show()
+    fig.write_html('storage/wiki_map.html')
+
+def display_centroids():
+    df = get_centroids(level='l3')
+    display_map(df, level='l3', color='l1')
+
 
 if __name__ == "__main__":
-    df = add_selfs(save=False)
-    get_matrix(df)
+    # df = add_selfs(save=False)
+    # get_matrix(df)
+    # shrink_matrix_dim()
+    # display_centroids()
+    print(get_clean_dump().head())
