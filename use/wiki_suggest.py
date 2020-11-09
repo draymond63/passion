@@ -1,37 +1,59 @@
 import pandas as pd
+import numpy as np
 import random
 from Passion.general import W2V_MATRIX, VITALS, COLUMNS
 
 class UserSuggester():
-    def __init__(self, survey):
+    def __init__(self, words):
         self.map = pd.read_csv(W2V_MATRIX, index_col='site')
         self.categories = pd.read_csv(VITALS, index_col='site')
-        # Knowledge about l1, l2, l3 and site preferences
-        # Confidence and value?
-        self.user = pd.DataFrame(survey)
-        self.user.index.name = 'site'
         # Add categories to the points so the l1 centroids can be calculated
         df = self.map.join(self.categories)
         self.centers = {}
         self.centers['l1'] = df.groupby('l1').agg(lambda x: sum(x)/len(x))
         self.centers['l2'] = df.groupby('l2').agg(lambda x: sum(x)/len(x))
         self.centers['l3'] = df.groupby('l3').agg(lambda x: sum(x)/len(x))
+        # Get beginning user coordinate
+        self.likes = self.translate(words)
+        self.position = self.get_coord() # Uses self.likes
+        self.radius = self.get_radius() # ? Encompass all liked wikis
+        self.learning_rate = 10 # ? How to set an initial value 
 
-    # Picks three, two leaning towards higher likes, and one unconfident
-    def recommend(self):
-        # Get 3 random L1 categories
-        selected = random.choices(self.user.index, weights=self.user['value'], k=2)
-        selected.extend(random.choices(self.user.index, weights=1 / self.user['confidence']))
-        return [self.pick_article(s) for s in selected]
+    def translate(self, words):
+        translations = {}
+        for word in words:
+            for key in self.categories:                    
+                if word in self.categories[key]:
+                    translations[word] = key
+                
+            # ! else find similar words !
+        return pd.DataFrame(translations, columns=['key'])
 
-    def pick_article(self, category):
-        # ! CHANGE TO ONLY NOT ONLY USE L1
-        options = self.categories[self.categories['l1'] == category]['name']
-        return random.choices(options)[0]
+    def get_like_points(self):
+        print(self.likes)
 
-    # User gives feedback after making a recommendation (which one was picked, engagement)
-    def feedback(self, wiki):
-        pass
+        site_likes = self.likes[self.likes['key'] == 'site']
+        points = self.map.filter(site_likes.index)
+
+        for key in ('l1', 'l2', 'l3'):
+            key_likes = self.likes[self.likes['key'] == key]
+            key_points = self.centers[key].filter(key_likes.index)
+            points.append(key_points)
+        return points
+
+    def get_coord(self):
+        points = self.get_like_points()
+        print(points.head(), points.shape)
+        return points.sum() / len(points)
+
+    # Distance from self.position to furtherest point in self.likes
+    def get_radius(self):
+        points = self.get_like_points()
+        dist_2 = np.sum((points - self.position)**2, axis=1) # Calculate distance from all point
+        print(dist_2)
+        return min(dist_2)
+            
+
     
 
 
@@ -39,35 +61,8 @@ class UserSuggester():
 # Take in user profile and suggest
 
 if __name__ == "__main__":
-    us = UserSuggester({
-        'confidence': {
-            'People': 0.2,
-            'History': 0.5,
-            'Geography': 0.1,
-            'Arts': 0.5,
-            'Philosophy_and_religion': 0.3,
-            'Everyday_life': 0.1,
-            'Society_and_social_sciences': 0.4,
-            'Biology_and_health_sciences': 0.3,
-            'Physical_sciences': 0.7,
-            'Technology': 0.8,
-            'Mathematics': 0.1,
-        },
-        'value': {
-            'People': 0.3,
-            'History': 0.2,
-            'Geography': 0.9,
-            'Arts': 0.2,
-            'Philosophy_and_religion': 0.1,
-            'Everyday_life': 0.5,
-            'Society_and_social_sciences': 0.3,
-            'Biology_and_health_sciences': 0.3,
-            'Physical_sciences': 0.3,
-            'Technology': 0.1,
-            'Mathematics': 0.1,
-        }
-    })
-    print(us.recommend())
+    us = UserSuggester(['People', 'Lebron James'])
+    # print(us.recommend())
 
 # * SURVEY:
 # Tell us what you currently like
