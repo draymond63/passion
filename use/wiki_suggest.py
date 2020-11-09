@@ -21,24 +21,20 @@ class UserSuggester():
         self.position = points.sum() / len(points) # Average like points
         self.radius = max(self.pos_dist(points)) # Encompass all liked wikis
         self.learning_rate = self.radius * 2 # ? How to set an initial value ?
+        # print('Radius:', self.radius)
 
     # Convert words to wikis
     def translate(self, words):
-        # Index by name so we can use the filter function (and the 'like' paramater)
-        name_categories = self.categories.reset_index('site')
-        name_categories = name_categories.set_index('name')
-        # Get the site corresponding to each word
-        translations = []
-        for word in words:
-            sites = name_categories.filter(like=word, axis='index')
-            translations.extend(sites['site'])
-        return translations
+        names = self.categories[self.categories['name'].isin(words)]
+        return list(names.index)
     
     def pos_dist(self, points):
         axis = 0 if isinstance(points, pd.Series) else 1
         return np.sum((points - self.position)**2, axis=axis)
     def get_name(self, site):
         return self.categories.loc[site, 'name']
+    def get_site(self, name):
+        return self.categories.loc[name, 'site']
     def get_like_points(self):
         return self.map.filter(self.likes, axis='index')
     
@@ -46,11 +42,18 @@ class UserSuggester():
     # - within the radius that isn't liked yet (to change positon/learning-rate)
     # - On the edge of the radius              (to change radius)
     # - random                                 (to change position)
-    def recommend(self):
-        return self.edge_recommendation(k=3)
+    def recommend(self) -> list:
+        return self.center_recommendation() + self.edge_recommendation() + self.random_recommendation()
 
-    def random_recommendation(self) -> str:
-        return random.choice(self.categories['name'])
+    def center_recommendation(self, k=1) -> list:
+        filtered_map = self.map.drop(self.likes + self.recommended)
+        radius_pos = self.pos_dist(filtered_map) - self.radius
+        dists = pd.DataFrame(radius_pos, index=filtered_map.index, columns=['v'])
+        # Get points closest the center
+        sites = dists.nsmallest(k, 'v').index
+        self.recommended.extend(sites)
+        return [self.get_name(s) for s in sites]
+
 
     def edge_recommendation(self, edge_proximity=0.01, k=1) -> list:
         # Calculate distance from edge of the 200 dimensional circle
@@ -64,17 +67,18 @@ class UserSuggester():
             edge_proximity *= 2
             edge_cases = dists[dists['v'] < edge_proximity]
         
-        print(f'picked {k} from {len(edge_cases)} options')
+        # print(f'picked {k} from {len(edge_cases)} options')
         # Sample ensures each choice is unique
         sites = random.sample(list(edge_cases.index), k=k)
         # Keep track of what we have recommended & Return it
         self.recommended.extend(sites)
         return [self.get_name(s) for s in sites]
 
+    def random_recommendation(self, k=1) -> list:
+        options = self.categories.drop(self.likes + self.recommended)
+        return random.choices(options['name'], k=k)
+
         
-
-
-
     
 
 
@@ -83,7 +87,6 @@ class UserSuggester():
 
 if __name__ == "__main__":
     us = UserSuggester(['LeBron James', 'Basketball', 'National Basketball Association'])
-    print(us.recommend())
     print(us.recommend())
 
 # * SURVEY:
