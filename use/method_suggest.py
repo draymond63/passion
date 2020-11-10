@@ -1,10 +1,13 @@
 import pandas as pd
 import numpy as np
 import json
-
-from googleapiclient.discovery import build # Youtube
+# Youtube
+from googleapiclient.discovery import build
+# Key words
 import wikipediaapi
-
+# from sklearn.feature_extraction.text import TfidfVectorizer
+# from nltk.stem.porter import PorterStemmer
+# Personal
 from wiki_suggest import TopicSuggestion
 from Passion.general import SECRETS
 
@@ -27,30 +30,22 @@ class MethodSuggestion(TopicSuggestion):
             self.methods = {m: funcs[m] for m in methods}
         else:
             self.methods = funcs
-        # YT API Token
+        # API Tokens
         with open(SECRETS) as f:
             secrets = json.load(f)
-        # Wikipedia API (For summaries)
-        self.wp = wikipediaapi.Wikipedia('en')
         # Build the youtube API for public data (no Oauth)
         self.yt = build('youtube', 'v3', developerKey=secrets['devKey'])
+        # Wikipedia API (For summaries)
+        self.wp = wikipediaapi.Wikipedia(
+            language='en',
+            extract_format=wikipediaapi.ExtractFormat.WIKI
+        )
 
     def get_keywords(self, selection):
-        ignore_words = ('needing', 'Wikidata', 'Wikipedia', 'articles', 'Articles')
         site = self.get_site(selection)
-        page = self.wp.page(site)
-        page_topics = list(page.categories)
-        # Clean topics
-        topics = []
-        for x in page_topics:
-            if not any(i in x for i in ignore_words):
-                x = x.replace('Category:', '')
-                topics.append(x)
-
-        # page_topics = [x.split('Category:')[1] for x in page_topics]
-        # page_topics = [x for x in page_topics if not 'needing' in x]
-
-        return topics
+        keys = list(self.categories.loc[site].unique())
+        # page = self.wp.page(site).text #TODO: Tf-idf with the page text
+        return keys
 
     # From category data in wiki_suggest.py
     def get_wiki(self, selection):
@@ -70,7 +65,7 @@ class MethodSuggestion(TopicSuggestion):
             relevanceLanguage='en',
             type='video',
             videoEmbeddable='true',
-            q=f'{selection} {keys} lesson'
+            q=keys + ' lesson'
         )
         response = request.execute()
         # Extract wanted data (should also extract IDs)
@@ -101,5 +96,5 @@ class MethodSuggestion(TopicSuggestion):
 
 if __name__ == "__main__":
     user = MethodSuggestion()
-    r = user.get_keywords('Basketball')
+    r = user.get_video('Spin')
     print(r)

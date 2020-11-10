@@ -15,5 +15,5 @@ class Suggestion(MethodSuggestion):
         return responses
 
 
-
-Suggestion(methods=['video'], words=['Spin']).demo()
+if __name__ == "__main__":
+    Suggestion(methods=['video'], words=['Spin']).demo()
