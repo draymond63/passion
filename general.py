@@ -33,6 +33,8 @@ CLEAN_DUMP = 'storage/wiki/cleaned_clickstream.tsv'
 W2V_MATRIX = 'storage/wiki/w2v-matrix.tsv'
 # Test analogies
 ANALOGIES = 'storage/wiki/analogies.csv'
+# Secrets
+SECRETS = 'storage/misc/secret_file.json'
 
 # * CONSTANTS
 SPACE_DIM = 200
