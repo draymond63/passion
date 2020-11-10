@@ -40,7 +40,7 @@ class TopicSuggestion():
     # - within the radius that isn't liked yet (to change radius)
     # - On the edge of the radius              (to change radius/position)
     # - random                                 (to change position)
-    def recommend(self) -> list:
+    def recommend_topic(self) -> list:
         types = ['center', 'edge', 'rand']
         recommendations = self.center_recommendation() + self.edge_recommendation() + self.random_recommendation()
         self.current_recommendations = {r: t for r,t in zip(recommendations, types)}
@@ -78,7 +78,7 @@ class TopicSuggestion():
         return random.choices(options['name'], k=k)
 
     # * FEEDBACK
-    def select(self, selection: str):
+    def select_topic(self, selection: str):
         assert selection in self.current_recommendations, "Selection was not in the list recommended"
         idx = self.current_recommendations[selection]
         # ! These values should come from somewhere
@@ -99,8 +99,8 @@ class TopicSuggestion():
 
 
 if __name__ == "__main__":
-    user = TopicSuggestion(['LeBron James', 'Basketball', 'National Basketball Association'])
-    for _ in range(5):
-        r = user.recommend()
-        user.select(r[1])
+    user = TopicSuggestion(['Quantum mechanics', 'Computer science', 'Artificial intelligence', 'Human behavior', 'Social work'])
+    for _ in range(10):
+        r = user.recommend_topic()
         print(r)
+        user.select_topic(r[int(input())])
