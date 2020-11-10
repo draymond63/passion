@@ -5,8 +5,8 @@ import json
 from googleapiclient.discovery import build
 # Key words
 import wikipediaapi
-# from sklearn.feature_extraction.text import TfidfVectorizer
-# from nltk.stem.porter import PorterStemmer
+# Books
+import requests
 # Personal
 from wiki_suggest import TopicSuggestion
 from Passion.general import SECRETS
@@ -32,9 +32,9 @@ class MethodSuggestion(TopicSuggestion):
             self.methods = funcs
         # API Tokens
         with open(SECRETS) as f:
-            secrets = json.load(f)
+            self.google_token = json.load(f)['devKey']
         # Build the youtube API for public data (no Oauth)
-        self.yt = build('youtube', 'v3', developerKey=secrets['devKey'])
+        self.yt = build('youtube', 'v3', developerKey=self.google_token)
         # Wikipedia API (For summaries)
         self.wp = wikipediaapi.Wikipedia(
             language='en',
@@ -80,9 +80,28 @@ class MethodSuggestion(TopicSuggestion):
     # Coursera
     def get_course(self, selection):
         pass
-    # Library?
-    def get_book(self, selection):
-        pass
+    # Google Books API # 'https://www.googleapis.com/books/v1/volumes?q=flowers+inauthor:keyes&key=yourAPIKey'
+    def get_book(self, selection, free=False):
+        url = 'https://www.googleapis.com/books/v1/volumes?'
+        # Create the url with custom parameters
+        keys = self.get_keywords(selection)
+        params = {
+            'q': '+'.join(keys),
+            'filter': 'full' if free else 'partial',
+            'key': self.google_token
+        } 
+        for key in params:
+            url += f'&{key}={params[key]}'
+        # Request data we want
+        response = requests.get(url).json()
+        # links = [item['selfLink'] for item in response['items']]
+        titles = [item['volumeInfo']['title'] for item in response['items']]
+        return {
+            # 'link': links,
+            'title': titles
+        }
+
+        
     # Spotify?
     def get_podcast(self, selection):
         pass
@@ -96,5 +115,5 @@ class MethodSuggestion(TopicSuggestion):
 
 if __name__ == "__main__":
     user = MethodSuggestion()
-    r = user.get_video('Spin')
+    r = user.get_book('Spin')
     print(r)
