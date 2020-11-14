@@ -110,68 +110,47 @@ def get_vitals(level=5):
         json.dump(levels, f)
     return levels
 
-def levels_to_df_5():
-    with open(VITALS_JSON) as f:
-        levels = json.load(f)
-    df = {
-        'l0': [],
-        'l1': [],
-        'l2': [],
-        'l3': [],
-        'l4': [],
-        'name': [],
-        'site': [],
-    }
-    for l0 in levels:
-        for l1 in levels[l0]:
-            for l2 in levels[l0][l1]:
-                for l3 in levels[l0][l1][l2]:
-                    for l4 in levels[l0][l1][l2][l3]:
-                        for name in levels[l0][l1][l2][l3][l4]:
-                            df['l0'].append(l0)
+# levels_to_df helper function
+def loop_levels_df(levels, df, func=lambda: None):
+    for l1 in levels:
+            for l2 in levels[l1]:
+                for l3 in levels[l1][l2]:
+                    for l4 in levels[l1][l2][l3]:
+                        for name in levels[l1][l2][l3][l4]:
+                            func()
                             df['l1'].append(l1)
                             df['l2'].append(l2)
                             df['l3'].append(l3)
                             df['l4'].append(l4)
                             df['name'].append(name)
-                            df['site'].append(levels[l0][l1][l2][l3][l4][name])
-    df = pd.DataFrame(df)
-    print(df.sample(5))
-    print(df.shape)
-    df.to_csv(VITALS, index=False)
+                            df['site'].append(levels[l1][l2][l3][l4][name])
 
-def levels_to_df_4():
+def levels_to_df(level=5):
     with open(VITALS_JSON) as f:
         levels = json.load(f)
     df = {
-        'l1': [],
-        'l2': [],
-        'l3': [],
-        'l4': [],
-        'name': [],
         'site': [],
+        'name': [],
+        'l4': [],
+        'l3': [],
+        'l2': [],
+        'l1': [],
     }
-    for l1 in levels:
-        for l2 in levels[l1]:
-            for l3 in levels[l1][l2]:
-                for l4 in levels[l1][l2][l3]:
-                    for name in levels[l1][l2][l3][l4]:
-                        df['l1'].append(l1)
-                        df['l2'].append(l2)
-                        df['l3'].append(l3)
-                        df['l4'].append(l4)
-                        df['name'].append(name)
-                        df['site'].append(levels[l1][l2][l3][l4][name])
+    if level == 5:
+        df['l0'] = []
+        for l0 in levels:
+            loop_levels_df(levels[l0], df, lambda: df['l0'].append(l0))
+    else:
+        loop_levels_df(levels, df)
+        
     df = pd.DataFrame(df)
+    df = df.set_index('site')
     print(df.sample(5))
     print(df.shape)
-    df.to_csv(VITALS, index=False)
-
-def levels_to_df(level=5):
-    levels_to_df_4() if level == 4 else levels_to_df_5()
+    df.to_csv(VITALS)
 
 if __name__ == "__main__":
-    level = 4
+    level = 5
     get_vitals(level)
     levels_to_df(level)
 
