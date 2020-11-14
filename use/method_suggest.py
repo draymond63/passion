@@ -100,7 +100,6 @@ class MethodSuggestion(TopicSuggestion):
             # 'link': links,
             'title': titles
         }
-
         
     # Spotify?
     def get_podcast(self, selection):

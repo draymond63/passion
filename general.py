@@ -15,6 +15,7 @@ COLUMNS = ['ref', 'site', 'type', 'amt']
 # Shape: (8935, 5) # ! should have 10043
 VITALS = 'storage/wiki/vitals.csv'
 VITALS_JSON = 'storage/wiki/vitals.json'
+VITALS_URI = 'storage/wiki/vitals_uri_list.json'
 
 # * Original dump, but only with the data from the vital repos
 #                    ref                site      path  amt
