@@ -5,8 +5,7 @@ from Passion.general import ANALOGIES, W2V_MATRIX
 
 
 class MapTester():
-    def __init__(self, df: pd.DataFrame):
-        self.mtrx = df
+    def __init__(self):
         self.analogies = pd.read_csv(ANALOGIES)
 
     def get_point(self, site):
@@ -29,7 +28,8 @@ class MapTester():
         r = b - a + c
         return self.get_closest(r, exclude=(a, b, c))
 
-    def evaluate(self):
+    def evaluate(self, df: pd.DataFrame):
+        self.mtrx = df
         correct = 0
         for _, row in self.analogies.iterrows():
             a, b, c = row[0:3]
@@ -41,10 +41,9 @@ class MapTester():
                 print(guess)
         return correct / len(self.analogies)
 
-
+m = MapTester()
 def evaluate(df: pd.DataFrame) -> float:
-    m = MapTester(df)
-    return m.evaluate()
+    return m.evaluate(df)
 
 
 if __name__ == "__main__":

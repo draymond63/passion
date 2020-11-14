@@ -4,32 +4,8 @@ from tqdm import tqdm
 
 import plotly.express as px
 from sklearn.manifold import TSNE
-from sklearn.decomposition import PCA
 
-from general import CLEAN_DUMP, W2V_MATRIX, VITALS
-from general import get_clean_dump
-
-# Ensures sites are strongest in their own axis
-def add_selfs(save=True):
-    df = get_clean_dump()
-    print(df.shape)
-    selfs = {
-        'site': [],
-        'ref': [],
-        'type': [],
-        'amt': []
-    }
-    for i, row in df.groupby('site')['amt']:
-        selfs['site'].append(i)
-        selfs['ref'].append(i)
-        selfs['type'].append('self')
-        selfs['amt'] = row.sum()
-    selfs = pd.DataFrame(selfs)
-    df = df.append(selfs, ignore_index=True)
-    print(df.shape)
-    if save:
-        df.to_csv(CLEAN_DUMP, sep='\t', index=False)
-    return df
+from general import W2V_MATRIX, W2V_2D_MAP, VITALS
 
 def get_centroids(m_file=W2V_MATRIX, level='l2'):
     mtrx = pd.read_csv(m_file, index_col='site')
@@ -48,20 +24,24 @@ def get_centroids(m_file=W2V_MATRIX, level='l2'):
     return pd.DataFrame.from_dict(data, orient='index')
 
 
-def display_map(m_file=W2V_MATRIX, level='site', color='l1'):
-    assert color in ('site', 'l1', 'l2', 'l3'), "Color must be l1-3 or 'site'"
-    assert color in ('l1', 'l2', 'l3'), "Color must be l1-3"
+def display_map(m_file=W2V_MATRIX, level='site', color='l1', save_file=W2V_2D_MAP):
+    assert color in ('site', 'l0', 'l1', 'l2', 'l3', 'l4'), "Color must be l0-4 or 'site'"
+    assert color in ('l0', 'l1', 'l2', 'l3', 'l4'), "Color must be l0-4"
     # Collapse to 2D
     if isinstance(m_file, str):
         mtrx = pd.read_csv(m_file, index_col='site')
     else:
         mtrx = m_file
-    # Calculate new points
-    tsne = TSNE(n_components=2, random_state=0, verbose=1)
-    vecs = tsne.fit_transform(mtrx.to_numpy())
-    # Replace n-dimensional data with the 2D data
-    vecs = pd.DataFrame(vecs)
-    vecs.index = mtrx.index
+    # Calculate collapsed points if need
+    if mtrx.shape[1] > 2:
+        tsne = TSNE(n_components=2, random_state=0, verbose=1)
+        vecs = tsne.fit_transform(mtrx.to_numpy())
+        # Replace n-dimensional data with the 2D data
+        vecs = pd.DataFrame(vecs)
+        vecs.index = mtrx.index
+    # Save the file if requested
+    if save_file:
+        vecs.to_csv(save_file, sep='\t')
     # Add the categorization for color
     if color:
         print(vecs.shape)
@@ -74,17 +54,23 @@ def display_map(m_file=W2V_MATRIX, level='site', color='l1'):
         x=0, y=1,
         color=color,
         hover_name=level,
-        title='Wikipedia Articles, mapped',
+        title=f'Wikipedia Articles ({vecs[level].nunique()} points, {vecs[color].nunique()} categories)',
     )
     fig.show()
     fig.write_html(f'storage/wiki/wiki-map({level}-{color}).html')
 
-def display_centroids(level='l2'):
+def display_centroids(level='l2', color='l1'):
     df = get_centroids(level=level)
-    display_map(df, level=level, color='l1')
+    display_map(df, level=level, color=color, save_file=None)
 
+# For https://projector.tensorflow.org/
+def get_projector_files():
+    df = pd.read_csv(W2V_MATRIX, index_col='site')
+    df.to_csv('vecs.tmp.tsv', sep='\t', index=False, header=False)
+    df.index.to_series().to_csv('labels.tmp.tsv', sep='\t', index=False, header=False)
 
 if __name__ == "__main__":
     # df = add_selfs(save=False)
-    # display_centroids()
-    display_map()
+    # display_centroids(level='l3', color='l0')
+    display_map(color='l0')
+    # get_projector_files()

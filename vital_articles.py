@@ -76,7 +76,7 @@ def parse_uri(storage, base_url, uri, name=None):
                 group[last_h[1]][last_h[2]][last_h[3]][title] = site
 
 
-def get_vitals(level=4):
+def get_vitals(level=5):
     base_url = f'https://en.wikipedia.org/wiki/Wikipedia:Vital_articles/Level/{level}/'
     with open(VITALS_URI) as f:
         uris = json.load(f)[str(level)]
@@ -86,8 +86,7 @@ def get_vitals(level=4):
         for uri in tqdm(uris):
             parse_uri(levels, base_url, uri)
 
-    elif level == 5: # ! GET RID OF NULLS IN vitals.json
-        # uris = {"Mathematics": "Mathematics"}
+    elif level == 5: # ! https://en.wikipedia.org/wiki/Wikipedia:Vital_articles/Level/5/People/Sports_figures#Shogi_2/2 has [edit]
         for area in tqdm(uris):
             levels[area] = {}
             if isinstance(uris[area], list):
@@ -168,11 +167,11 @@ def levels_to_df_4():
     print(df.shape)
     df.to_csv(VITALS, index=False)
 
-def levels_to_df(level=4):
+def levels_to_df(level=5):
     levels_to_df_4() if level == 4 else levels_to_df_5()
 
 if __name__ == "__main__":
-    level = 5
-    # get_vitals(level)
+    level = 4
+    get_vitals(level)
     levels_to_df(level)
 
