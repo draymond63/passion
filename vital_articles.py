@@ -150,7 +150,18 @@ def levels_to_df(level=5):
     df.to_csv(VITALS)
 
 if __name__ == "__main__":
-    level = 5
-    get_vitals(level)
-    levels_to_df(level)
+    # level = 5
+    # get_vitals(level)
+    # levels_to_df(level)
+
+    df = pd.read_csv(VITALS)
+    d = df[df['l4'].isin(('Basics', 'General'))]
+    for col in d:
+        saved = round((df[col].nunique() - d[col].nunique()) / df[col].nunique() * 100, 2)
+        print(col, saved)
+
+    print(df['l1'].unique())
+    print()
+    print(d['l1'].unique())
+
 

@@ -4,11 +4,17 @@ import random
 from Passion.general import W2V_MATRIX, VITALS, COLUMNS
 
 class TopicSuggestion():
-    def __init__(self, words=[]):
-        self.map = pd.read_csv(W2V_MATRIX, index_col='site')
-        self.categories = pd.read_csv(VITALS, index_col='site')
+    def __init__(self, words=[], exclude=[], basic=False, map_path=W2V_MATRIX, category_path=VITALS):
+        self.map = pd.read_csv(map_path, index_col='site')
+        self.categories = pd.read_csv(category_path, index_col='site')
+        # Remove an articles that aren't basic (if required)
+        if basic:
+            self.categories = self.categories[~self.categories['l4'].isin(('Basics', 'General'))]
+        # Remove any excluded l0 categories
+        self.categories = self.categories[~self.categories['l0'].isin(exclude)]
         # Remove any vitals that isn't in the map (e.g missing articles)
         self.categories = self.categories[self.categories.index.isin(self.map.index)]
+        self.map = self.map[self.map.index.isin(self.categories.index)]
         # Keep track of what the user likes and what the user has been recommended
         self.likes = self.translate(words)
         self.recommended = []
@@ -41,8 +47,8 @@ class TopicSuggestion():
     # - On the edge of the radius              (to change radius/position)
     # - random                                 (to change position)
     def recommend_topic(self) -> list:
-        types = ['center', 'edge', 'rand']
-        recommendations = self.center_recommendation() + self.edge_recommendation() + self.random_recommendation()
+        types = ['center', 'center', 'rand']
+        recommendations = self.center_recommendation(k=2) + self.random_recommendation() # + self.edge_recommendation()
         self.current_recommendations = {r: t for r,t in zip(recommendations, types)}
         return recommendations
 
@@ -86,15 +92,20 @@ class TopicSuggestion():
             self.radius /= 1.5
         elif idx == 'edge':
             self.radius *= 1.25
-            self.move_position(selection, ratio=0.25)
+            self.update_position(selection)
         elif idx == 'rand':
-            self.move_position(selection, ratio=0.5)
+            self.update_position(selection)
 
-    def move_position(self, name: str, ratio: float):
-        site = self.get_site(name)
-        point = self.map.loc[site]
-        increment = self.pos_dist(point) * ratio
-        self.position += increment
+    # Alternative to move_position
+    def update_position(self, selection: str):
+        print("POSITION")
+        print(self.position.head())
+        self.likes.append(selection)
+        points = self.get_liked_points()
+        points = points if len(points) else self.map
+        self.position = points.sum() / len(points)
+        print("POSITION")
+        print(self.position.head())
         
 
 

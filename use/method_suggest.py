@@ -4,7 +4,7 @@ import json
 # Youtube
 from googleapiclient.discovery import build
 # Key words
-import wikipediaapi
+import wikipedia as wp
 # Books
 import requests
 # Personal
@@ -13,9 +13,9 @@ from Passion.general import SECRETS
 
 # Method 
 class MethodSuggestion(TopicSuggestion):
-    def __init__(self, methods=[], words=[]):
+    def __init__(self, methods=[], **args):
         # Just used so the interface will call all init functions
-        super(MethodSuggestion, self).__init__(words)
+        super(MethodSuggestion, self).__init__(**args)
         # Get call list
         funcs = {
             'wiki': self.get_wiki,
@@ -35,22 +35,17 @@ class MethodSuggestion(TopicSuggestion):
             self.google_token = json.load(f)['devKey']
         # Build the youtube API for public data (no Oauth)
         self.yt = build('youtube', 'v3', developerKey=self.google_token)
-        # Wikipedia API (For summaries)
-        self.wp = wikipediaapi.Wikipedia(
-            language='en',
-            extract_format=wikipediaapi.ExtractFormat.WIKI
-        )
 
     def get_keywords(self, selection):
         site = self.get_site(selection)
         keys = list(self.categories.loc[site].unique())
-        # page = self.wp.page(site).text #TODO: Tf-idf with the page text
+        # page = wp.page(site) #TODO: Tf-idf with the page text
         return keys
 
     # From category data in wiki_suggest.py
     def get_wiki(self, selection):
         site = self.get_site(selection)
-        summary = self.wp.page(site).summary
+        summary = wp.summary(site)
         return {
             'summary': summary,
             'link': 'https://en.wikipedia.org/wiki/' + site
@@ -114,5 +109,5 @@ class MethodSuggestion(TopicSuggestion):
 
 if __name__ == "__main__":
     user = MethodSuggestion()
-    r = user.get_book('Spin')
+    r = user.get_wiki('Spin')
     print(r)
