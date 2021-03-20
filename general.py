@@ -1,91 +1,51 @@
-### THIS CLUSTERS DATA AND APPENDS THEIR CLASSIFICATION TO THE dump_cleaned CSV 
-# Rescources:
-# https://scikit-learn.org/stable/modules/clustering.html
 
+# * The dump compiled from https://dumps.wikimedia.org/other/clickstream/
+#                    ref                site      path  amt
+# Bathtubs_Over_Broadway  Industrial_musical      link   97
+#            other-empty  Industrial_musical  external   88
+#       Industrial_music  Industrial_musical      link   67
+# Shape: (50990825, 4)
+DUMP = 'storage/wiki/clickstream-enwiki-2020-09.tsv.gz' # ? 'storage/wiki/clickstream-combined.tsv.gz'
+COLUMNS = ['ref', 'site', 'type', 'amt']
+
+# * Vital repos from https://en.wikipedia.org/wiki/Wikipedia:Vital_articles/4/
+#      l0                          l1               l2                l3       l4          name          site
+#  People  Entertainers,_directors...     Entertainers            Actors    Stage   Zero Mostel   Zero_Mostel
+# History                     History  Ancient history   Ancient history     Asia    Atropatene    Atropatene
+# Shape: (42834, 7) | ((10061, 6) when level = 4) # ! should have 44362 (10043 when level = 4)
+VITALS = 'storage/wiki/vitals.csv'
+VITALS_JSON = 'storage/wiki/vitals.json'
+VITALS_URI = 'storage/wiki/vitals_uri_list.json'
+
+# * Original dump, but only with the data from the vital repos
+#                    ref                site      path  amt
+# Bathtubs_Over_Broadway  Industrial_musical      link   97
+#            other-empty  Industrial_musical  external   88
+#       Industrial_music  Industrial_musical      link   67
+# Shape: (42834, 4)
+CLEAN_DUMP = 'storage/wiki/cleaned_clickstream.tsv'
+
+# * Improved compact matrix -> factorized using w2v instead of PSA and PMI
+#                        1         2         3         4  ...        148       149       150    
+# site                                                    ...  
+# 100_metres     -0.044598  0.119342 -0.049774  0.013482  ...  -0.127239 -0.047054  0.050480    
+# James_VI_and_I -0.033750  0.102637 -0.088770  0.022699  ...   0.049431 -0.074568 -0.135170 
+# Shape: (42834, 150)   
+W2V_MATRIX = 'storage/wiki/w2v-matrix.tsv'
+# Test analogies
+ANALOGIES = 'storage/wiki/analogies.csv'
+# T-SNE'd Matrix
+W2V_2D_MAP = 'storage/wiki/w2v_2d_map.tsv'
+# Secrets
+SECRETS = 'storage/misc/secret_file.json'
+
+# * CONSTANTS
+SPACE_DIM = 200 # ! THIS ISN'T USED !
+
+# * Start of general purpose functions
 import pandas as pd
-from sklearn.cluster import AgglomerativeClustering
 
-# * Default Clustering algorithm
-def hierachical_cluster(data, threshold=1):
-    cl = AgglomerativeClustering(
-        n_clusters=None,
-        distance_threshold=threshold,
-        linkage='ward',
-    )
-    return cl.fit_predict(data)
-
-# * Converts a list of key words into a searchable job
-def keys_to_str(keys: list, jobs: (list, pd.Series), use_full_title=True) -> str:
-    # Find a job that contains all the keys
-    for job in jobs:
-        good_job = True
-        
-        for key in keys:
-            if key not in job:
-                good_job = False
-        
-        # If the job contains all the keys, find the order and return them
-        if good_job:
-            # Use only the keys to make the string
-            if not use_full_title:
-                # Grab starting index of each word
-                placement = {key: job.find(key) for key in keys}
-                # Sort words into a list by their index
-                words = sorted(placement, key=placement.get)
-                # Join all the words with spaces
-                return ' '.join(words)
-            # Or use (almost) the full title
-            else:
-                # Find when the first word appears
-                beginning = min([job.find(key) for key in keys])
-                # Remove the unimportant intro words
-                return job[beginning:]
-
-    raise AssertionError(f'No job contained all the keys in the group {keys}, suggesting a bad grouping')
-
-def name_group(titles: pd.Series) -> str:
-    # Concatentate all the words
-    total = ' '.join(titles)
-    # Get all the unique words in the series
-    words = set(total.split(' '))
-    # Remove words that are fillers
-    stop_words = set(['in', 'of', '-', '&', 'the', 'a', 'an'])
-    words = words - stop_words
-
-    counts = {}
-    for word in words:
-        counts[word] = total.count(word)
-
-    return max(counts, key=counts.get)
-
-
-# * Combines all groups in the list into one
-def combine_group(df, groups, col: str):
-    # Merge all the groups into one
-    # Iterate through all useless groups, putting the largest groupNums in their place
-    for group in groups[1:]:
-        # Replace all the old misc category numbers with the main misc number
-        df[col] = df[col].apply(
-            lambda x: groups[0] if x == group else x)
-        # Move the largest categories number to the one that is now empty
-        df[col] = df[col].apply(
-            lambda x: group if x == len(df)-1 else x)
-    return df
-
-# * Matches the title column with a group numbering and a list of keys that relate to each group number
-def cluster(vecs: pd.DataFrame, new_col: str, title_column=None, cluster_threshold=1) -> pd.DataFrame:
-    # Result in is an np.ndarray of numerical categories
-    groups = hierachical_cluster(vecs, cluster_threshold)
-    groups = pd.Series(groups, name=new_col)
-
-    print('Clustering grouped', len(groups), 'jobs into', groups.nunique(), 'groups')
-    # Merge the title column so that it has something to merge with
-    if isinstance(title_column, pd.Series):
-        assert len(groups) == len(title_column), f'vecs must be the same length as the title column, not {len(vecs)}, {len(title_column)}'
-        # Reset the index to make sure concatentation works as intended
-        title_column.reset_index(inplace=True, drop=True)
-        groups = pd.concat([groups, title_column], axis=1)
-    else:
-        groups = pd.DataFrame(groups)
-
-    return groups
+def get_dump():
+    return pd.read_csv(DUMP, sep='\t', compression='gzip', names=COLUMNS)
+def get_clean_dump():
+    return pd.read_csv(CLEAN_DUMP, sep='\t')

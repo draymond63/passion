@@ -2,10 +2,13 @@
 *.xls
 *.json
 *.pdf
+*.txt
+*.exe
 */testing/
 */node_modules/
 /api/
 /compilation/
 /wordnet/
+/storage
 
 *__pycache__
